@@ -709,7 +709,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     if (has && cur.revealed) {
       const p = prog()[cur.card.id], now = Date.now();
       ['again', 'hard', 'good', 'easy'].forEach(g => {
-        $('#iv-' + g).textContent = session.free ? (g === 'again' ? 'làm lại' : 'tiếp') : fmtSpan(schedule(p, g, now).d - now);
+        $('#iv-' + g).textContent = session.free ? (g === 'again' ? 'làm lại ngay' : 'không ghi điểm') : 'ôn lại sau ' + fmtSpan(schedule(p, g, now).d - now);
       });
     }
     document.querySelectorAll('.grade').forEach(b => b.classList.toggle('suggest', !!(has && cur.revealed && cur.check && cur.check.grade === b.dataset.g)));
