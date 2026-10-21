@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Noto+Sans+JP:wght@400;500&display=swap">
 <style>
-/* Layout: khung trắng kiểu djtguide — thanh menu chữ Nhật trên cùng, breadcrumb, một cột nội dung ở giữa. */
+/* Layout: khung kiểu djtguide — thanh menu chữ Nhật trên cùng, breadcrumb, một cột nội dung ở giữa. */
 :root {
   --bg: #f6f6f4;
   --panel: #ffffff;
@@ -19,15 +19,18 @@
   --ink: #1c1c1e;
   --muted: #6b6b70;
   --accent: #2f5fa8;
+  --danger: #b4432d;
   --f-ui: "Be Vietnam Pro", -apple-system, system-ui, "Segoe UI", sans-serif;
   --f-jp: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg: #232325; --panel: #2a2a2d; --line: #3c3c40; --ink: #e6e6e8; --muted: #9a9aa0; --accent: #8fb4ec; color-scheme: dark; }
+  :root:not([data-theme="light"]) { --bg: #232325; --panel: #2a2a2d; --line: #3c3c40; --ink: #e6e6e8; --muted: #9a9aa0; --accent: #8fb4ec; --danger: #e58069; color-scheme: dark; }
 }
-:root[data-theme="dark"] { --bg: #232325; --panel: #2a2a2d; --line: #3c3c40; --ink: #e6e6e8; --muted: #9a9aa0; --accent: #8fb4ec; color-scheme: dark; }
+:root[data-theme="dark"] { --bg: #232325; --panel: #2a2a2d; --line: #3c3c40; --ink: #e6e6e8; --muted: #9a9aa0; --accent: #8fb4ec; --danger: #e58069; color-scheme: dark; }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 15.5px; line-height: 1.65; }
 a { color: var(--accent); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .topbar { border-bottom: 1px solid var(--line); }
 .topbar-in, .main {
@@ -53,9 +56,41 @@ h2 { font-size: 18px; font-weight: 600; margin: 28px 0 8px; padding-bottom: 6px;
 .page.active { display: block; }
 .box { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; margin: 10px 0; }
 .todo { color: var(--muted); font-style: italic; }
+.muted { color: var(--muted); font-size: 14px; }
 ul.list { padding-left: 1.2em; margin: 6px 0; }
 ul.list li { margin: 4px 0; }
 footer { margin-top: 48px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+
+/* Trang chủ: mỗi mục một dòng */
+.sections { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.sec { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 4px 16px; padding: 16px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+.sec:hover { background: var(--panel); }
+.sec .jp { font-family: var(--f-jp); font-size: 26px; line-height: 1.2; color: var(--accent); grid-row: span 2; }
+.sec b { font-size: 17px; font-weight: 600; }
+.sec p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+/* Thư viện */
+.lib-group { margin-top: 22px; }
+.lib-group h2 { display: flex; align-items: baseline; gap: 8px; }
+.lib-group h2 .count { font-size: 13px; font-weight: 400; color: var(--muted); }
+.lib-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lib-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.lib-item:last-child { border-bottom: 0; }
+.lib-item .txt { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.lib-item .txt small { display: block; color: var(--muted); font-size: 13.5px; }
+.del { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 6px; padding: 2px 8px; font-size: 13px; cursor: pointer; }
+.del:hover { color: var(--danger); border-color: var(--danger); }
+.form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.form label { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; font-weight: 500; }
+.form .full { grid-column: 1 / -1; }
+.form input, .form select, textarea { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 15px; font-weight: 400; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 7px 14px; cursor: pointer; font-weight: 500; }
+.btn.primary { background: var(--accent); color: var(--panel); border-color: transparent; }
+.status { font-size: 13.5px; color: var(--muted); min-height: 1.4em; }
+details summary { cursor: pointer; font-weight: 500; }
+textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+@media (max-width: 560px) { .form { grid-template-columns: minmax(0, 1fr); } .sec { grid-template-columns: 52px minmax(0, 1fr); } .sec .jp { font-size: 22px; } }
 </style>
 </head>
 <body>
@@ -63,13 +98,10 @@ footer { margin-top: 48px; font-size: 12.5px; color: var(--muted); border-top: 1
   <div class="topbar-in">
     <a class="logo" href="#home">日本語</a>
     <nav id="nav" aria-label="Mục chính">
+      <a href="#home"><small>trang chủ</small><span>ホーム</span></a>
       <a href="#hoc"><small>học</small><span>学習</span></a>
       <a href="#nguphap"><small>ngữ pháp</small><span>文法</span></a>
       <a href="#thuvien"><small>thư viện</small><span>図書館</span></a>
-      <a href="#nhatky"><small>cập nhật</small><span>日誌</span></a>
-      <a href="#bosung"><small>bổ sung</small><span>補論</span></a>
-      <a href="#diendan"><small>diễn đàn</small><span>掲示板</span></a>
-      <a href="#home"><small>trang chủ</small><span>ホーム</span></a>
     </nav>
   </div>
 </header>
@@ -79,11 +111,11 @@ footer { margin-top: 48px; font-size: 12.5px; color: var(--muted); border-top: 1
 
   <section class="page" id="p-home" data-title="Trang chủ" data-jp="ホーム">
     <h1>Trang chủ <span class="jp">ホーム</span></h1>
-    <p class="todo">Giới thiệu ngắn về trang: trang này dành cho ai, học theo cách nào.</p>
-    <h2>Bắt đầu từ đâu</h2>
-    <p class="todo">Viết vài dòng hướng dẫn người mới, rồi trỏ sang mục Học.</p>
-    <h2>Mới cập nhật</h2>
-    <p class="todo">Tóm tắt các thay đổi gần đây (lấy từ mục Nhật ký).</p>
+    <div class="sections">
+      <a class="sec" href="#hoc"><span class="jp">学習</span><b>Học</b><p>Công cụ luyện tập: gõ kana để nhớ mặt chữ (Gojūon Drill), viết tay kana và từ vựng có máy chấm (Renshūchō).</p></a>
+      <a class="sec" href="#nguphap"><span class="jp">文法</span><b>Ngữ pháp</b><p>Các bài ngữ pháp N5 và N4, mỗi bài ngắn gọn kèm ví dụ.</p></a>
+      <a class="sec" href="#thuvien"><span class="jp">図書館</span><b>Thư viện</b><p>Sách, app, trang web và tài liệu đọc, nghe. Bạn tự thêm ngay trên trang.</p></a>
+    </div>
   </section>
 
   <section class="page" id="p-hoc" data-title="Học" data-jp="学習">
@@ -111,35 +143,32 @@ footer { margin-top: 48px; font-size: 12.5px; color: var(--muted); border-top: 1
 
   <section class="page" id="p-thuvien" data-title="Thư viện" data-jp="図書館">
     <h1>Thư viện <span class="jp">図書館</span></h1>
-    <h2>Sách &amp; giáo trình</h2>
-    <p class="todo">Thêm sách tại đây.</p>
-    <h2>App &amp; website</h2>
-    <p class="todo">Thêm app, trang web tại đây.</p>
-    <h2>Đọc &amp; nghe</h2>
-    <p class="todo">Thêm tài liệu đọc, nghe tại đây.</p>
+    <div id="libGroups"></div>
+
+    <h2>Thêm tài liệu</h2>
+    <form class="form" id="libForm" autocomplete="off">
+      <label>Tên<input id="libName" required placeholder="Ví dụ: Minna no Nihongo 1"></label>
+      <label>Nhóm<select id="libGroup"></select></label>
+      <label class="full">Link (không bắt buộc)<input id="libUrl" type="url" placeholder="https://…"></label>
+      <label class="full">Ghi chú (không bắt buộc)<input id="libNote" placeholder="Ví dụ: học bài 1–5 trước"></label>
+      <div class="row full"><button class="btn primary" type="submit">Thêm vào thư viện</button><span class="status" id="libStatus" aria-live="polite"></span></div>
+    </form>
+    <p class="muted">Tài liệu bạn thêm được lưu trong trình duyệt của máy đang dùng. Muốn có trên máy khác (iPad, laptop), dùng mục chuyển dữ liệu bên dưới.</p>
+
+    <details class="box">
+      <summary>Chuyển thư viện sang máy khác</summary>
+      <p class="muted">Bấm Sao chép trên máy cũ, gửi đoạn chữ sang máy mới, dán vào ô dưới rồi bấm Nhập. Các mục trùng tên và link sẽ được bỏ qua.</p>
+      <textarea id="libData" spellcheck="false" placeholder="Dán dữ liệu thư viện vào đây"></textarea>
+      <div class="row"><button class="btn" type="button" id="libCopy">Sao chép dữ liệu</button><button class="btn" type="button" id="libImport">Nhập</button><span class="status" id="libIoStatus" aria-live="polite"></span></div>
+    </details>
   </section>
 
-  <section class="page" id="p-nhatky" data-title="Nhật ký" data-jp="日誌">
-    <h1>Nhật ký cập nhật <span class="jp">日誌</span></h1>
-    <div class="box"><b>20/10/2026</b> · Tạo khung trang.</div>
-  </section>
-
-  <section class="page" id="p-bosung" data-title="Bổ sung" data-jp="補論">
-    <h1>Bổ sung <span class="jp">補論</span></h1>
-    <p class="todo">Bài viết lẻ, ghi chú, chủ đề khác.</p>
-  </section>
-
-  <section class="page" id="p-diendan" data-title="Diễn đàn" data-jp="掲示板">
-    <h1>Diễn đàn <span class="jp">掲示板</span></h1>
-    <p class="todo">Chưa làm. Nơi hỏi đáp, sẽ thêm sau.</p>
-  </section>
-
-  <footer>Nihongo Guide · khung trang, nội dung đang soạn.</footer>
+  <footer>Nihongo Guide</footer>
 </main>
 
 <script>
 (() => {
-  const PAGES = ['home', 'hoc', 'nguphap', 'thuvien', 'nhatky', 'bosung', 'diendan'];
+  const PAGES = ['home', 'hoc', 'nguphap', 'thuvien'];
   function show() {
     const h = location.hash.replace('#', '');
     const id = PAGES.includes(h) ? h : 'home';
@@ -152,6 +181,82 @@ footer { margin-top: 48px; font-size: 12.5px; color: var(--muted); border-top: 1
   }
   window.addEventListener('hashchange', show);
   show();
+
+  /* ---------- Thư viện ---------- */
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const GROUPS = [['book', 'Sách & giáo trình'], ['app', 'App & website'], ['read', 'Đọc & nghe']];
+  const KEY = 'nihongo.library.v1';
+  let lib = [];
+  try { lib = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { lib = []; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(lib)); return true; } catch (e) { return false; } };
+  const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
+
+  $('#libGroup').innerHTML = GROUPS.map(([k, n]) => `<option value="${k}">${n}</option>`).join('');
+
+  function render() {
+    $('#libGroups').innerHTML = GROUPS.map(([k, n]) => {
+      const items = lib.filter(x => x.g === k);
+      const body = items.length
+        ? `<ul class="lib-list">${items.map(x => {
+            const url = safeUrl(x.url);
+            const name = url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(x.name)}</a>` : esc(x.name);
+            return `<li class="lib-item"><div class="txt">${name}${x.note ? `<small>${esc(x.note)}</small>` : ''}</div><button class="del" type="button" data-del="${esc(x.id)}" aria-label="Xoá ${esc(x.name)}">Xoá</button></li>`;
+          }).join('')}</ul>`
+        : `<p class="todo">Chưa có mục nào. Thêm ở ô Thêm tài liệu bên dưới.</p>`;
+      return `<div class="lib-group"><h2>${n} <span class="count">${items.length || ''}</span></h2>${body}</div>`;
+    }).join('');
+  }
+
+  $('#libForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = $('#libName').value.trim(), url = $('#libUrl').value.trim(), note = $('#libNote').value.trim(), g = $('#libGroup').value;
+    if (!name) return;
+    lib.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), g, name, url, note });
+    const ok = save();
+    render();
+    $('#libName').value = ''; $('#libUrl').value = ''; $('#libNote').value = '';
+    $('#libStatus').textContent = ok ? `Đã thêm “${name}”.` : 'Đã thêm, nhưng trình duyệt không cho lưu nên tải lại trang sẽ mất.';
+    $('#libName').focus();
+  });
+
+  $('#libGroups').addEventListener('click', e => {
+    const b = e.target.closest('[data-del]'); if (!b) return;
+    if (b.dataset.confirm) {
+      lib = lib.filter(x => x.id !== b.dataset.del); save(); render();
+    } else {
+      b.dataset.confirm = '1'; b.textContent = 'Xoá thật?';
+      setTimeout(() => { if (b.isConnected) { delete b.dataset.confirm; b.textContent = 'Xoá'; } }, 3000);
+    }
+  });
+
+  $('#libCopy').addEventListener('click', () => {
+    const text = JSON.stringify(lib);
+    $('#libData').value = text;
+    const done = () => { $('#libIoStatus').textContent = `Đã sao chép ${lib.length} mục.`; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, () => { $('#libData').select(); $('#libIoStatus').textContent = 'Đã chọn sẵn đoạn chữ, bấm Ctrl+C để sao chép.'; });
+    } else { $('#libData').select(); $('#libIoStatus').textContent = 'Đã chọn sẵn đoạn chữ, bấm Ctrl+C để sao chép.'; }
+  });
+
+  $('#libImport').addEventListener('click', () => {
+    let data;
+    try { data = JSON.parse($('#libData').value); } catch (e) { $('#libIoStatus').textContent = 'Không đọc được dữ liệu. Hãy dán đúng đoạn chữ đã sao chép.'; return; }
+    if (!Array.isArray(data)) { $('#libIoStatus').textContent = 'Dữ liệu không đúng dạng thư viện.'; return; }
+    const seen = new Set(lib.map(x => x.name + '|' + x.url));
+    let added = 0;
+    data.forEach(x => {
+      if (!x || !x.name || !GROUPS.some(([k]) => k === x.g)) return;
+      const key = x.name + '|' + (x.url || '');
+      if (seen.has(key)) return; seen.add(key);
+      lib.push({ id: x.id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6), g: x.g, name: String(x.name), url: String(x.url || ''), note: String(x.note || '') });
+      added++;
+    });
+    save(); render();
+    $('#libIoStatus').textContent = `Đã nhập ${added} mục mới.`;
+  });
+
+  render();
 })();
 </script>
 </body>
