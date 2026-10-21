@@ -284,7 +284,6 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       <button data-seg="mode" data-v="dict">Nghe – viết</button>
     </div>
     <div class="seg" id="promptSeg" role="group" aria-label="Viết ra"></div>
-    <div class="seg" id="inputSeg" role="group" aria-label="Cách trả lời"></div>
     <div class="nav-actions">
       <button class="icon-btn" data-act="restart" id="btnRestart" title="Làm lại các từ của lượt này từ đầu, đếm lại đúng sai">Làm lại</button>
       <button class="icon-btn" data-act="skip" id="btnSkip" title="Bỏ qua từ này, không chấm điểm (phím S)">Đổi từ</button>
@@ -374,7 +373,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     /* lần đầu: giữ các tuỳ chỉnh bút từ Renshūchō cũ */
     try { const os = (JSON.parse(localStorage.getItem('renshucho.v1')) || {}).settings || {}; ['newPer', 'penOnly', 'penAuto'].forEach(k => { if (os[k] !== undefined) store.settings[k] = os[k]; }); } catch (e) {}
   }
-  const S = Object.assign({ deck: 'kanji', mode: 'fc', ans: 'vi', input: 'type', newPer: 10, trace: false, penOnly: false, penAuto: false, shuffle: false }, store.settings);
+  const S = Object.assign({ deck: 'kanji', mode: 'fc', ans: 'kanji', newPer: 10, trace: false, penOnly: false, penAuto: false, shuffle: false }, store.settings);
   store.settings = S;
   function save() { try { localStorage.setItem(LS, JSON.stringify(store)); } catch (e) {} }
 
@@ -518,10 +517,9 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     kanji: { name: 'Kanji', tab: TABS.kanji, cards: () => DATA.kanji },
     vocab: { name: 'Vocabulary 単語', tab: TABS.vocab, cards: () => DATA.vocab }
   };
-  const ANS = { vi: 'Tiếng Việt', kana: 'Kana', roma: 'Romaji' };
+  const ANS = { kanji: 'Kanji', kana: 'Kana', roma: 'Romaji' };
   if (!DECKS[S.deck]) S.deck = 'kanji';
-  if (!ANS[S.ans]) S.ans = 'vi';
-  if (S.input !== 'hand') S.input = 'type';
+  if (!ANS[S.ans]) S.ans = 'kanji';
   const deck = () => DECKS[S.deck];
   const cardById = id => deck().cards().find(c => c.id === id);
 
@@ -537,7 +535,6 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   }
   function matchTyped(v) {
     const c = cur.card;
-    if (cur.t === 'vi') { const u = normVi(v); return !!u && viOptions(c.vi).has(u); }
     const u = normRoma(v); return !!u && c.reads.some(r => normRoma(romaji(r)) === u);
   }
 
@@ -568,13 +565,14 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   let interacted = false;
 
   function plan(card) {
-    const t = S.ans;
-    let p = S.mode === 'fc' ? 'jp' : 'audio', note = '';
+    let t = S.ans, note = '';
+    if (t === 'kanji' && !card.kanji) { t = 'kana'; note = 'Từ này không có kanji, hãy viết bằng kana.'; }
+    let p = S.mode === 'fc' ? (S.ans === 'kanji' ? 'vi' : 'jp') : 'audio';
     if (p === 'jp' && t === 'kana' && !card.kanji) { p = 'vi'; note = 'Từ này không có kanji: xem nghĩa rồi viết kana.'; }
-    if (t === 'vi' && !card.vi) note = 'Sheet chưa có nghĩa cho từ này.';
-    const m = t === 'kana' ? 'hand' : S.input;
-    const target = t === 'kana' ? card.kana : t === 'roma' ? card.roma : card.vi;
-    return { p, t, m, target, note, self: m === 'hand' && t !== 'kana' };
+    if (p === 'vi' && !card.vi) p = 'roma';
+    const m = t === 'roma' ? 'type' : 'hand';
+    const target = t === 'kanji' ? card.kanji : t === 'kana' ? card.kana : card.roma;
+    return { p, t, m, target, note, self: false };
   }
 
   function startSession(opts = {}) {
@@ -658,7 +656,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       const ti = $('#typeIn'), v = ti.value, ok = matchTyped(v);
       cur.check = { typed: v, ok, grade: ok ? 'good' : 'again' };
       ti.readOnly = true; ti.classList.add(ok ? 'ok' : 'bad'); ti.blur();
-    } else if (cur.t === 'kana') { try { cur.check = checkInk(); } catch (e) { cur.check = null; } }
+    } else if (cur.m === 'hand') { try { cur.check = checkInk(); } catch (e) { cur.check = null; } }
     else cur.check = null;
     renderPrompt(); renderTools(); redraw();
     if (S.mode === 'fc') speak(cur.card.say);
@@ -709,8 +707,6 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     document.querySelectorAll('#modeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.mode));
     $('#promptSeg').innerHTML = Object.entries(ANS).map(([k, l]) =>
       `<button data-seg="ans" data-v="${k}" aria-pressed="${S.ans === k}">${l}</button>`).join('');
-    $('#inputSeg').hidden = S.ans === 'kana';
-    $('#inputSeg').innerHTML = `<button data-seg="input" data-v="type" aria-pressed="${S.input === 'type'}">⌨ Gõ phím</button><button data-seg="input" data-v="hand" aria-pressed="${S.input === 'hand'}">✎ Viết tay</button>`;
   }
 
   function renderStats() {
@@ -724,18 +720,19 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
 
   function renderPrompt() {
     const c = cur.card, isK = S.deck === 'kanji';
-    const pl = { jp: isK ? 'Kanji' : 'Từ', vi: 'Nghĩa', audio: 'Nghe' }[cur.p];
-    const tl = cur.t === 'vi' ? 'tiếng Việt'
+    const pl = { jp: isK ? 'Kanji' : 'Từ', vi: 'Nghĩa', audio: 'Nghe', roma: 'Cách đọc' }[cur.p];
+    const tl = cur.t === 'kanji' ? 'kanji'
       : cur.t === 'roma' ? (isK ? 'romaji (âm On hoặc Kun)' : 'romaji')
       : (isK ? `kana (${c.readLbl})` : scriptOf(c.kana));
     let main = '';
     if (cur.p === 'jp') main = `<div class="pm-jp">${esc(c.word)}</div>`;
     else if (cur.p === 'vi') main = `<div class="pm-vi">${esc(c.vi)}</div>`;
+    else if (cur.p === 'roma') main = `<div class="pm-roma">${esc(c.roma)}</div>`;
     else main = `<button class="play-big" data-act="play" aria-label="Nghe">${SPEAKER}</button><div class="pm-cap">Chạm để nghe lại</div>`;
 
     let hint = '';
-    if (cur.t === 'vi') hint = c.hv ? `Hán Việt: ${esc(c.hv)}` : (cur.p === 'audio' ? `Romaji: ${esc(c.roma)}` : '');
-    else if (cur.p !== 'vi' && c.vi) hint = `Nghĩa: ${esc(c.vi)}`;
+    if (cur.p === 'vi') hint = c.hv ? `Hán Việt: ${esc(c.hv)}` : `Cách đọc: ${esc(c.roma)}`;
+    else if (c.vi) hint = `Nghĩa: ${esc(c.vi)}`;
 
     const showAudio = cur.p === 'audio' || cur.revealed;
     $('#q').innerHTML = `
@@ -770,9 +767,9 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       let ckHtml = '', cap = '';
       if (cur.m === 'type') {
         ckHtml = `<div class="check g-${ck.ok ? 'good' : 'again'}"><b>Máy chấm: ${ck.ok ? 'Đúng' : 'Sai'}</b><ul><li>Bạn gõ: “${esc(ck.typed) || '(chưa gõ gì)'}”</li></ul></div>`;
-        cap = cur.t === 'vi' ? 'Đúng khi khớp một trong các nghĩa ghi trong Sheet; không phân biệt dấu và hoa thường.' : 'Không phân biệt hoa thường; “ou”, “oo”, “o” được coi như nhau.';
+        cap = isK ? 'Đúng khi khớp một âm On hoặc Kun bất kỳ; không phân biệt hoa thường, “ou”, “oo”, “o” coi như nhau.' : 'Không phân biệt hoa thường; “ou”, “oo”, “o” được coi như nhau.';
       } else if (cur.self) {
-        ckHtml = `<div class="check c-self"><b>Tự chấm</b><ul><li>Máy không đọc được chữ viết tay ${cur.t === 'vi' ? 'tiếng Việt' : 'romaji'}. So với đáp án rồi chọn:</li></ul>
+        ckHtml = `<div class="check c-self"><b>Tự chấm</b><ul><li>Máy không đọc được chữ viết tay romaji. So với đáp án rồi chọn:</li></ul>
           <div class="self-grade"><button class="btn g-good" data-act="grade" data-g="good">Đúng</button><button class="btn g-again" data-act="grade" data-g="again">Sai</button></div></div>`;
       } else {
         ckHtml = !ck ? '' : ck.empty
@@ -806,10 +803,10 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     const typing = has && cur.m === 'type';
     $('.desk').classList.toggle('typing', typing);
     $('#typeBox').hidden = !typing;
-    if (typing) $('#typeCap').textContent = cur.revealed ? 'Bấm Từ tiếp theo hoặc Enter để sang từ mới.' : `Gõ ${cur.t === 'vi' ? 'nghĩa tiếng Việt (không cần dấu)' : 'romaji'} rồi bấm Enter hoặc Chấm bài.`;
-    $('#btnTrace').hidden = !(has && cur.t === 'kana');
-    const n = has && cur.t === 'kana' ? Array.from(cur.target).length : 0;
-    $('#paperFoot').innerHTML = !has ? '' : cur.t === 'kana' ? `<span class="jp">練習</span> · ${n} ô · ${scriptOf(cur.target)}` : '<span class="jp">練習</span> · viết tự do';
+    if (typing) $('#typeCap').textContent = cur.revealed ? 'Bấm Từ tiếp theo hoặc Enter để sang từ mới.' : 'Gõ romaji rồi bấm Enter hoặc Chấm bài.';
+    $('#btnTrace').hidden = !(has && cur.m === 'hand');
+    const n = has && cur.m === 'hand' ? Array.from(cur.target).length : 0;
+    $('#paperFoot').innerHTML = has && cur.m === 'hand' ? `<span class="jp">練習</span> · ${n} ô · ${cur.t === 'kanji' ? 'kanji' : scriptOf(cur.target)}` : '';
   }
 
   /* ---------- canvas ---------- */
@@ -829,7 +826,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   function layoutGrid() {
     const foot = 22, pad = Math.max(14, Math.min(W, Hh) * 0.05);
     const aw = W - pad * 2, ah = Hh - pad * 2 - foot;
-    if (cur && cur.t !== 'kana') {
+    if (cur && cur.m !== 'hand') {
       const size = Math.max(40, Math.min(ah / 3, aw / 4, 160));
       grid = { size, rows: 1, cols: 1, n: 0, free: true, x: pad, y: pad };
       return;
@@ -1122,7 +1119,6 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       if (k === 'deck' && S.deck !== v) { S.deck = v; save(); startSession(); }
       else if (k === 'mode' && S.mode !== v) { S.mode = v; save(); startSession(); }
       else if (k === 'ans' && S.ans !== v) { S.ans = v; save(); startSession(); }
-      else if (k === 'input' && S.input !== v) { S.input = v; save(); renderControls(); if (cur && !cur.revealed) { showCard(false); resize(); } }
       return;
     }
     const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
