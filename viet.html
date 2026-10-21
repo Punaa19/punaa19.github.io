@@ -163,6 +163,11 @@ a.icon-btn { text-decoration: none; color: var(--ink); display: inline-flex; ali
 .g-again { --c: var(--again); } .g-hard { --c: var(--hard); } .g-good { --c: var(--good); } .g-easy { --c: var(--easy); }
 .grade { color: var(--c); background: color-mix(in srgb, var(--c) 11%, var(--paper)); border: 1px solid color-mix(in srgb, var(--c) 38%, transparent); }
 .grade.suggest { outline: 3px solid var(--c); outline-offset: 2px; }
+.tally-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.tbox { min-width: 78px; padding: 6px 12px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; line-height: 1.2; font-variant-numeric: tabular-nums; color: var(--c); background: color-mix(in srgb, var(--c) 11%, var(--paper)); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); }
+.tbox b { font-size: 18px; font-weight: 600; }
+.tbox span { font-size: 12px; }
+.t-done { --c: var(--ink); }
 .check { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; color: var(--c); background: color-mix(in srgb, var(--c) 10%, var(--paper)); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); }
 .check b { font-size: 15px; }
 .check ul { margin: 0; padding-left: 18px; color: var(--ink); font-size: 13.5px; }
@@ -261,7 +266,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     </div>
     <div class="seg" id="promptSeg" role="group" aria-label="Kiểu đề"></div>
     <div class="nav-actions">
-      <button class="icon-btn" data-act="shuffle" id="btnShuffle" aria-pressed="false" title="Cho từ ra theo thứ tự ngẫu nhiên">Đảo thứ tự</button>
+      <button class="icon-btn" data-act="restart" id="btnRestart" title="Làm lại các từ của lượt này từ đầu, đếm lại đúng sai">Làm lại</button>
       <button class="icon-btn" data-act="skip" id="btnSkip" title="Bỏ qua từ này, không chấm điểm (phím S)">Đổi từ</button>
       <button class="icon-btn go" data-act="next" id="btnNext" title="Phím N">Chấm bài</button>
     </div>
@@ -284,14 +289,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
         <button class="btn" data-act="clear" id="btnClear">Xoá hết</button>
         <button class="btn" data-act="trace" id="btnTrace" aria-pressed="false">Tô theo mẫu</button>
         <button class="btn" data-act="pen" id="btnPen" aria-pressed="false">Chỉ nhận bút</button>
-        <div class="spacer"></div>
-        <button class="btn primary" data-act="flip" id="btnFlip">Xem đáp án <span class="kbd">Space</span></button>
-        <div class="grades" id="grades" hidden>
-          <button class="grade g-again" data-act="grade" data-g="again"><b>Sai</b><span id="iv-again"></span></button>
-          <button class="grade g-hard" data-act="grade" data-g="hard"><b>Khó</b><span id="iv-hard"></span></button>
-          <button class="grade g-good" data-act="grade" data-g="good"><b>Đúng</b><span id="iv-good"></span></button>
-          <button class="grade g-easy" data-act="grade" data-g="easy"><b>Dễ</b><span id="iv-easy"></span></button>
-        </div>
+        <div class="tally-bar" id="tallyBar" aria-live="polite"></div>
       </div>
     </section>
 
@@ -514,7 +512,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   }
 
   /* ---------- state ---------- */
-  let session = { queue: [], free: false, stats: { again: 0, hard: 0, good: 0, easy: 0 }, total: 0, seen: 0 };
+  let session = { queue: [], ids: [], first: {}, free: false, stats: { again: 0, hard: 0, good: 0, easy: 0 }, total: 0, seen: 0 };
   let cur = null;
   let strokes = [], history = [];
   let interacted = false;
@@ -539,7 +537,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       const fresh = (S.shuffle ? shuffle(cards.filter(c => !p[c.id])) : cards.filter(c => !p[c.id])).slice(0, S.newPer);
       q = S.shuffle ? shuffle([...due, ...fresh]) : [...due, ...fresh];
     }
-    session = { queue: q.map(c => c.id), free: !!opts.free, stats: { again: 0, hard: 0, good: 0, easy: 0 }, total: q.length, seen: 0 };
+    session = { queue: q.map(c => c.id), ids: q.map(c => c.id), first: {}, free: !!opts.free, stats: { again: 0, hard: 0, good: 0, easy: 0 }, total: q.length, seen: 0 };
     $('#doneView').hidden = true;
     renderControls(); renderStats();
     if (!cards.length) return showEmpty();
@@ -562,6 +560,26 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     if (session.queue.length < 2) { toast('Lượt này chỉ còn 1 từ.'); return; }
     session.queue.push(session.queue.shift());
     showCard();
+  }
+  function restartRound() {
+    if (!session.ids.length) { startSession(); return; }
+    const ids = shuffle(session.ids.slice());
+    session = { queue: ids, ids: session.ids, first: {}, free: session.free, stats: { again: 0, hard: 0, good: 0, easy: 0 }, total: ids.length, seen: 0 };
+    $('#doneView').hidden = true;
+    renderStats(); showCard();
+    toast('Làm lại từ đầu: bộ đếm đã về 0.');
+  }
+  function tallyCounts() {
+    const f = Object.values(session.first || {});
+    const n = gs => f.filter(x => gs.includes(x)).length;
+    return { done: f.length, good: n(['good', 'easy']), hard: n(['hard']), again: n(['again']) };
+  }
+  function renderTally() {
+    const t = tallyCounts();
+    $('#tallyBar').innerHTML = `<div class="tbox t-done"><b>${t.done}/${session.total}</b><span>Đã làm</span></div>
+      <div class="tbox g-good"><b>${t.good}</b><span>Đúng</span></div>
+      <div class="tbox g-hard"><b>${t.hard}</b><span>Khó</span></div>
+      <div class="tbox g-again"><b>${t.again}</b><span>Sai</span></div>`;
   }
   function nextCard() {
     if (!cur) return;
@@ -590,6 +608,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     if (!cur || !cur.revealed) return;
     const id = cur.card.id;
     session.stats[g]++;
+    if (!(id in session.first)) session.first[id] = g;
     if (!session.free) { const p = prog(); p[id] = schedule(p[id], g); save(); }
     session.queue.shift();
     if (g === 'again') session.queue.splice(Math.min(3, session.queue.length), 0, id);
@@ -600,11 +619,11 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
 
   function showDone() {
     cur = null;
-    const st = session.stats, cards = deck().cards(), p = prog(), now = Date.now();
+    const tc = tallyCounts(), st = { again: tc.again, hard: tc.hard, good: tc.good, easy: 0 }, cards = deck().cards(), p = prog(), now = Date.now();
     const freshLeft = cards.filter(c => !p[c.id]).length;
     const future = cards.map(c => p[c.id] && p[c.id].d).filter(d => d && d > now);
     const next = future.length ? Math.min(...future) : 0;
-    const did = st.again + st.hard + st.good + st.easy;
+    const did = tc.done;
     const head = did ? (session.free ? 'Xong lượt ôn tự do' : 'Xong lượt này') : 'Chưa có thẻ nào đến hạn';
     $('#doneCard').innerHTML = `
       <h2><span class="jp">${did ? '済' : '休'}</span>${head}</h2>
@@ -612,10 +631,11 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
         <div class="g-again"><b>${st.again}</b><span>Sai</span></div>
         <div class="g-hard"><b>${st.hard}</b><span>Khó</span></div>
         <div class="g-good"><b>${st.good}</b><span>Đúng</span></div>
-        <div class="g-easy"><b>${st.easy}</b><span>Dễ</span></div></div>` : ''}
+        <div class="t-done"><b>${did}</b><span>Đã làm</span></div></div>` : ''}
       <p class="meta" style="margin:0">${next ? `Thẻ tiếp theo của bộ ${esc(deck().name)} đến hạn sau ${fmtSpan(next - now)}.` : `Bộ ${esc(deck().name)} còn ${freshLeft} thẻ mới chưa học.`}</p>
       <div class="row">
         ${freshLeft ? `<button class="btn primary" data-act="more-new">Học ${Math.min(S.newPer, freshLeft)} thẻ mới</button>` : ''}
+        ${did ? '<button class="btn" data-act="restart">Làm lại lượt này</button>' : ''}
         <button class="btn${freshLeft ? '' : ' primary'}" data-act="free">Ôn ngẫu nhiên 15 thẻ</button>
       </div>
       ${session.free || !did ? '' : '<p class="meta" style="margin:0">Ôn ngẫu nhiên không thay đổi lịch ôn tập.</p>'}`;
@@ -686,7 +706,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
         <div class="ans-jp">${esc(c.kanji || c.kana)}</div>
         <dl class="ans-dl">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
         ${ckHtml}
-        <div class="pm-cap">Máy chỉ so hình dạng, vị trí và cỡ chữ với mẫu, không kiểm tra thứ tự nét. Bấm Từ tiếp theo (hoặc Enter) để nhận điểm máy chấm, hoặc tự chọn nút khác.</div>`;
+        <div class="pm-cap">Máy chỉ so hình dạng, vị trí và cỡ chữ với mẫu, không kiểm tra thứ tự nét. Bấm Từ tiếp theo (hoặc Enter) để sang từ mới. Kết quả được đếm theo điểm máy chấm.</div>`;
       a.hidden = false; a.classList.remove('reveal-in'); void a.offsetWidth; a.classList.add('reveal-in');
     } else a.hidden = true;
     $('#promptPanel').classList.toggle('revealed', cur.revealed);
@@ -697,22 +717,12 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
 
   function renderTools() {
     const has = !!cur;
-    $('#btnFlip').hidden = has && cur.revealed;
-    $('#btnFlip').disabled = !has;
-    $('#grades').hidden = !(has && cur.revealed);
     $('#btnTrace').setAttribute('aria-pressed', S.trace);
     $('#btnPen').setAttribute('aria-pressed', S.penOnly);
-    $('#btnShuffle').setAttribute('aria-pressed', !!S.shuffle);
+    renderTally();
     $('#btnSkip').disabled = !has;
     $('#btnNext').disabled = !has;
     $('#btnNext').textContent = has && cur.revealed ? 'Từ tiếp theo →' : 'Chấm bài';
-    if (has && cur.revealed) {
-      const p = prog()[cur.card.id], now = Date.now();
-      ['again', 'hard', 'good', 'easy'].forEach(g => {
-        $('#iv-' + g).textContent = session.free ? (g === 'again' ? 'làm lại ngay' : 'không ghi điểm') : 'ôn lại sau ' + fmtSpan(schedule(p, g, now).d - now);
-      });
-    }
-    document.querySelectorAll('.grade').forEach(b => b.classList.toggle('suggest', !!(has && cur.revealed && cur.check && cur.check.grade === b.dataset.g)));
     const n = has ? Array.from(cur.target).length : 0;
     $('#paperFoot').innerHTML = has ? `<span class="jp">練習</span> · ${n} ô · ${cur.t === 'kanji' ? 'kanji' : scriptOf(cur.target)}` : '';
   }
@@ -1009,7 +1019,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       case 'flip': reveal(); break;
       case 'next': nextCard(); break;
       case 'skip': skipCard(); break;
-      case 'shuffle': S.shuffle = !S.shuffle; save(); toast(S.shuffle ? 'Đã bật đảo thứ tự: từ ra ngẫu nhiên.' : 'Đã tắt đảo thứ tự.'); startSession(); break;
+      case 'restart': restartRound(); break;
       case 'grade': grade(b.dataset.g); break;
       case 'undo': undo(); break;
       case 'clear': clearInk(); break;
