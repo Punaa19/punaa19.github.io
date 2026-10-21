@@ -177,6 +177,23 @@ a.icon-btn { text-decoration: none; color: var(--ink); display: inline-flex; ali
 .check ul { margin: 0; padding-left: 18px; color: var(--ink); font-size: 13.5px; }
 .check .nums { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
+/* Typing + self-grade */
+.type-box { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; }
+.type-box input {
+  width: min(560px, 100%); font: inherit; font-size: clamp(22px, 3vw, 30px); padding: 14px 18px; border-radius: 12px;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); text-align: center;
+}
+.type-box input:focus { outline: none; border-color: var(--accent); }
+.type-box input.ok { border-color: var(--good); color: var(--good); }
+.type-box input.bad { border-color: var(--again); color: var(--again); }
+.type-box .pm-cap { text-align: center; max-width: 520px; }
+.desk.typing #pad, .desk.typing .paper-foot, .desk.typing .tools > .btn { display: none; }
+.self-grade { display: flex; gap: 8px; margin-top: 4px; }
+.self-grade .btn { flex: 1; justify-content: center; font-weight: 600; }
+.self-grade .btn.g-good { color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, transparent); }
+.self-grade .btn.g-again { color: var(--again); border-color: color-mix(in srgb, var(--again) 45%, transparent); }
+.check.c-self { --c: var(--accent); }
+
 /* Done */
 .done { position: absolute; inset: 0; background: var(--bg); display: grid; place-items: center; z-index: 2; padding: 12px; }
 .done-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); padding: 28px; max-width: 460px; width: 100%; display: flex; flex-direction: column; gap: 16px; }
@@ -263,10 +280,11 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   <nav class="controls" aria-label="Chọn bài luyện">
     <div class="seg" id="deckSeg" role="group" aria-label="Bộ từ"></div>
     <div class="seg" id="modeSeg" role="group" aria-label="Chế độ">
-      <button data-seg="mode" data-v="fc">Thẻ nhớ</button>
+      <button data-seg="mode" data-v="fc">Flashcard</button>
       <button data-seg="mode" data-v="dict">Nghe – viết</button>
     </div>
-    <div class="seg" id="promptSeg" role="group" aria-label="Kiểu đề"></div>
+    <div class="seg" id="promptSeg" role="group" aria-label="Viết ra"></div>
+    <div class="seg" id="inputSeg" role="group" aria-label="Cách trả lời"></div>
     <div class="nav-actions">
       <button class="icon-btn" data-act="restart" id="btnRestart" title="Làm lại các từ của lượt này từ đầu, đếm lại đúng sai">Làm lại</button>
       <button class="icon-btn" data-act="skip" id="btnSkip" title="Bỏ qua từ này, không chấm điểm (phím S)">Đổi từ</button>
@@ -284,6 +302,10 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     <section class="desk">
       <div class="paper-wrap" id="paperWrap">
         <canvas id="pad" aria-label="Ô viết tay"></canvas>
+        <div class="type-box" id="typeBox" hidden>
+          <input id="typeIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Gõ câu trả lời">
+          <div class="pm-cap" id="typeCap"></div>
+        </div>
         <div class="paper-foot" id="paperFoot"></div>
       </div>
       <div class="tools">
@@ -309,11 +331,10 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     </div>
 
     <div class="field">
-      <label for="mineText">Từ của tôi</label>
-      <p>Mỗi dòng một từ: <code>かな ; 漢字 ; nghĩa ; Hán Việt</code>. Chỉ cần phần kana, các phần sau có thể bỏ trống. Romaji được tạo tự động.</p>
-      <textarea id="mineText" spellcheck="false" placeholder="べんきょう ; 勉強 ; học tập ; MIỄN CƯỠNG&#10;みなと ; 港 ; cảng ; CẢNG&#10;コンテナ ; ; container"></textarea>
-      <div class="row"><button class="btn primary" data-act="save-mine">Lưu bộ từ</button></div>
-      <div class="status" id="mineStatus"></div>
+      <span class="lbl">Dữ liệu từ Google Sheet</span>
+      <p id="dataNote">Đang kiểm tra…</p>
+      <p>Bộ Kanji lấy từ tab “Kanji 漢字”, bộ Vocabulary lấy từ tab “Vocabulary”. Sửa Sheet xong thì bấm Tải lại; Google có thể mất vài phút mới cập nhật.</p>
+      <div class="row"><button class="btn" data-act="reload-data">Tải lại từ Sheet</button></div>
     </div>
 
     <div class="field">
@@ -345,12 +366,15 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   /* ---------- storage ---------- */
-  const LS = 'renshucho.v1';
+  const LS = 'renshucho.kanji.v1';
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(LS)) || {}; } catch (e) { saved = {}; }
-  const store = { progress: saved.progress || {}, mine: saved.mine || '', settings: saved.settings || {} };
-  const S = Object.assign({ deck: 'n5', mode: 'fc', newPer: 10, trace: false, penOnly: false, penAuto: false, shuffle: false }, store.settings);
-  S.prompt = Object.assign({ fc: 'vi-kana', dict: 'audio-kana' }, store.settings.prompt || {});
+  const store = { progress: saved.progress || {}, settings: saved.settings || {}, cache: saved.cache || null };
+  if (!saved.settings) {
+    /* lần đầu: giữ các tuỳ chỉnh bút từ Renshūchō cũ */
+    try { const os = (JSON.parse(localStorage.getItem('renshucho.v1')) || {}).settings || {}; ['newPer', 'penOnly', 'penAuto'].forEach(k => { if (os[k] !== undefined) store.settings[k] = os[k]; }); } catch (e) {}
+  }
+  const S = Object.assign({ deck: 'kanji', mode: 'fc', ans: 'vi', input: 'type', newPer: 10, trace: false, penOnly: false, penAuto: false, shuffle: false }, store.settings);
   store.settings = S;
   function save() { try { localStorage.setItem(LS, JSON.stringify(store)); } catch (e) {} }
 
@@ -391,111 +415,136 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     return k && !h ? 'katakana' : h && !k ? 'hiragana' : 'kana';
   };
 
-  /* ---------- decks ---------- */
-  const mk = (id, kana, kanji = '', vi = '', hv = '') => ({ id, kana, kanji, vi, hv, roma: romaji(kana) });
-  const H = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん';
-  const HIRA = Array.from(H).map(c => mk('h-' + c, c));
-  const KATA = Array.from(H).map(c => { const k = String.fromCharCode(c.charCodeAt(0) + 0x60); return mk('k-' + k, k); });
-  const N5_RAW = `学生|がくせい|học sinh|HỌC SINH
-先生|せんせい|giáo viên|TIÊN SINH
-学校|がっこう|trường học|HỌC HIỆU
-日本|にほん|Nhật Bản|NHẬT BẢN
-日本語|にほんご|tiếng Nhật|NHẬT BẢN NGỮ
-人|ひと|người|NHÂN
-水|みず|nước|THỦY
-火|ひ|lửa|HỎA
-山|やま|núi|SƠN
-川|かわ|sông|XUYÊN
-木|き|cây|MỘC
-本|ほん|sách|BẢN
-車|くるま|xe hơi|XA
-電車|でんしゃ|tàu điện|ĐIỆN XA
-会社|かいしゃ|công ty|HỘI XÃ
-会社員|かいしゃいん|nhân viên công ty|HỘI XÃ VIÊN
-大学|だいがく|đại học|ĐẠI HỌC
-友達|ともだち|bạn bè|HỮU ĐẠT
-家族|かぞく|gia đình|GIA TỘC
-時間|じかん|thời gian|THỜI GIAN
-今日|きょう|hôm nay|KIM NHẬT
-明日|あした|ngày mai|MINH NHẬT
-毎日|まいにち|mỗi ngày|MỖI NHẬT
-天気|てんき|thời tiết|THIÊN KHÍ
-電話|でんわ|điện thoại|ĐIỆN THOẠI
-新聞|しんぶん|báo giấy|TÂN VĂN
-時計|とけい|đồng hồ|THỜI KẾ
-名前|なまえ|tên|DANH TIỀN
-食べる|たべる|ăn|THỰC
-飲む|のむ|uống|ẨM
-見る|みる|nhìn, xem|KIẾN
-行く|いく|đi|HÀNH
-来る|くる|đến|LAI
-書く|かく|viết|THƯ
-読む|よむ|đọc|ĐỘC
-聞く|きく|nghe|VĂN
-話す|はなす|nói chuyện|THOẠI
-大きい|おおきい|to, lớn|ĐẠI
-小さい|ちいさい|nhỏ|TIỂU
-新しい|あたらしい|mới|TÂN
-高い|たかい|cao, đắt|CAO
-安い|やすい|rẻ|AN
-魚|さかな|cá|NGƯ
-肉|にく|thịt|NHỤC
-雨|あめ|mưa|VŨ
-電気|でんき|điện, đèn|ĐIỆN KHÍ
-銀行|ぎんこう|ngân hàng|NGÂN HÀNG
-病院|びょういん|bệnh viện|BỆNH VIỆN
-東京|とうきょう|Tokyo|ĐÔNG KINH
-先週|せんしゅう|tuần trước|TIÊN CHU
-外国|がいこく|nước ngoài|NGOẠI QUỐC
-映画|えいが|phim|ÁNH HỌA
-|コーヒー|cà phê|
-|テレビ|tivi|
-|カメラ|máy ảnh|
-|パン|bánh mì|
-|ホテル|khách sạn|
-|ベトナム|Việt Nam|
-|タクシー|taxi|
-|ノート|vở ghi|`;
-  const N5 = N5_RAW.split('\n').map(l => { const [kj, ka, vi, hv] = l.split('|'); return mk('n-' + (kj || ka), ka, kj, vi, hv); });
-
-  const KANA_RE = /^[ぁ-ゖァ-ヺー・\s]+$/;
-  let MINE = [];
-  function parseMine(text) {
-    const cards = [], bad = [], seen = new Set();
-    text.split('\n').forEach((line, i) => {
-      const t = line.trim(); if (!t || t.startsWith('#')) return;
-      let f = t.split(/\s*[;|\t]\s*/).map(x => x.trim());
-      if (!KANA_RE.test(f[0] || '') && KANA_RE.test(f[1] || '')) f = [f[1], f[0], ...f.slice(2)];
-      const kana = (f[0] || '').replace(/\s+/g, '');
-      if (!kana || !KANA_RE.test(kana)) { bad.push(i + 1); return; }
-      const id = 'm-' + kana + '-' + (f[1] || '');
-      if (seen.has(id)) return; seen.add(id);
-      cards.push(mk(id, kana, f[1] || '', f[2] || '', (f[3] || '').toUpperCase()));
-    });
-    return { cards, bad };
+  /* ---------- decks: đọc từ Google Sheet ---------- */
+  const SHEET_ID = '1hzSKBFmbF4f1n-vG_iNa-Nbul-fiSMqZTSqSrFbQUL8';
+  const TABS = { kanji: 'Kanji 漢字', vocab: 'Vocabulary' };
+  const csvUrl = tab => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(tab)}`;
+  function parseCSV(t) {
+    const rows = []; let row = [], f = '', q = false;
+    for (let i = 0; i < t.length; i++) {
+      const ch = t[i];
+      if (q) { if (ch === '"') { if (t[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === ',') { row.push(f); f = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && t[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += ch;
+    }
+    if (f || row.length) { row.push(f); rows.push(row); }
+    return rows;
   }
-  MINE = parseMine(store.mine).cards;
+  const HAS_KANJI = /[\p{Script=Han}〆]/u;
+  const clean = v => String(v ?? '').trim();
+  const splitReads = v => clean(v).split(/[・、,，;\/]/).map(x => x.replace(/[()（）\-‐.\s]/g, '')).filter(Boolean);
+  function findHeader(rows, need) {
+    for (let i = 0; i < Math.min(rows.length, 20); i++) {
+      const r = rows[i].map(c => clean(c).toLowerCase());
+      if (need.every(n => r.some(c => c.includes(n)))) return i;
+    }
+    return -1;
+  }
+  const colOf = (hd, ...names) => hd.findIndex(c => names.some(n => clean(c).toLowerCase().includes(n)));
+  function buildKanji(rows) {
+    const h = findHeader(rows, ['kanji', 'meaning']); if (h < 0) return [];
+    const hd = rows[h];
+    const ci = { k: colOf(hd, 'kanji'), hv: colOf(hd, 'hán việt', 'han viet'), on: colOf(hd, "on'yomi", 'on’yomi', '音読み'), kun: colOf(hd, "kun'yomi", 'kun’yomi', '訓読み'), comp: colOf(hd, 'compound', '熟語'), vi: colOf(hd, 'meaning') };
+    const out = [], seen = new Set();
+    rows.slice(h + 1).forEach(r => {
+      const k = clean(r[ci.k]); if (!k || seen.has(k)) return; seen.add(k);
+      const on = splitReads(r[ci.on]), kun = splitReads(r[ci.kun]);
+      const kana = kun[0] || on[0] || '';
+      out.push({
+        id: 'kj-' + k, word: k, kanji: k, kana, reads: [...kun, ...on], readLbl: kun[0] ? 'âm Kun' : 'âm On',
+        on: clean(r[ci.on]), kun: clean(r[ci.kun]), comp: ci.comp < 0 ? '' : clean(r[ci.comp]),
+        vi: clean(r[ci.vi]), hv: ci.hv < 0 ? '' : clean(r[ci.hv]).toUpperCase(),
+        roma: romaji(kana), say: [on[0], kun[0]].filter(Boolean).join('、') || k
+      });
+    });
+    return out;
+  }
+  function buildVocab(rows) {
+    const h = findHeader(rows, ['word', 'meaning']); if (h < 0) return [];
+    const hd = rows[h];
+    const ci = { w: colOf(hd, 'word', '単語'), r: colOf(hd, 'reading', '読み'), vi: colOf(hd, 'meaning'), jlpt: colOf(hd, 'jlpt'), bai: colOf(hd, 'bài') };
+    const out = [], seen = new Set();
+    rows.slice(h + 1).forEach(r => {
+      const w = clean(r[ci.w]); if (!w) return;
+      let kana = clean(r[ci.r]).replace(/\s+/g, '');
+      if (!kana && !HAS_KANJI.test(w)) kana = w;
+      kana = kana.replace(/[～~〜]/g, '');
+      if (!kana) return;
+      const id = 'v-' + w + '|' + kana; if (seen.has(id)) return; seen.add(id);
+      out.push({
+        id, word: w, kanji: HAS_KANJI.test(w) ? w : '', kana, reads: [kana], vi: clean(r[ci.vi]), hv: '',
+        jlpt: ci.jlpt < 0 ? '' : clean(r[ci.jlpt]), bai: ci.bai < 0 ? '' : clean(r[ci.bai]),
+        roma: romaji(kana), say: kana
+      });
+    });
+    return out;
+  }
+  let DATA = { kanji: [], vocab: [] }, loading = false, dataInfo = { at: 0, err: '' };
+  if (store.cache) { try { DATA = { kanji: buildKanji(store.cache.kanji || []), vocab: buildVocab(store.cache.vocab || []) }; dataInfo.at = store.cache.at || 0; } catch (e) {} }
+  async function fetchTab(tab) {
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
+    try {
+      const r = await fetch(csvUrl(tab), { signal: ctl.signal, cache: 'no-store' });
+      if (!r.ok) throw new Error('lỗi ' + r.status);
+      const txt = await r.text();
+      if (/^\s*</.test(txt)) throw new Error('Sheet chưa mở chia sẻ “Bất kỳ ai có đường liên kết”');
+      return parseCSV(txt);
+    } finally { clearTimeout(tm); }
+  }
+  async function loadData(manual) {
+    loading = true; renderDataNote();
+    try {
+      const [k, v] = await Promise.all([fetchTab(TABS.kanji), fetchTab(TABS.vocab)]);
+      DATA = { kanji: buildKanji(k), vocab: buildVocab(v) };
+      store.cache = { at: Date.now(), kanji: k, vocab: v }; save();
+      dataInfo = { at: store.cache.at, err: '' };
+      if (manual) toast(`Đã tải ${DATA.kanji.length} kanji và ${DATA.vocab.length} từ vựng từ Sheet.`);
+    } catch (e) {
+      dataInfo.err = e.name === 'AbortError' ? 'mạng chậm, hết thời gian chờ' : (e.message || 'không rõ lỗi');
+      if (manual) toast('Không tải được Sheet: ' + dataInfo.err);
+    }
+    loading = false; renderDataNote();
+  }
+  function renderDataNote() {
+    const el = $('#dataNote'); if (!el) return;
+    el.textContent = loading ? 'Đang tải từ Google Sheet…'
+      : (dataInfo.at ? `Cập nhật lúc ${new Date(dataInfo.at).toLocaleString('vi-VN')}: ${DATA.kanji.length} kanji, ${DATA.vocab.length} từ vựng.` : 'Chưa tải được dữ liệu.')
+        + (dataInfo.err ? ` Lần tải gần nhất bị lỗi: ${dataInfo.err}.` : '');
+  }
 
   const DECKS = {
-    n5: { name: 'Từ N5', vocab: true, cards: () => N5 },
-    mine: { name: 'Từ của tôi', vocab: true, cards: () => MINE }
+    kanji: { name: 'Kanji', tab: TABS.kanji, cards: () => DATA.kanji },
+    vocab: { name: 'Vocabulary 単語', tab: TABS.vocab, cards: () => DATA.vocab }
   };
-  const PROMPTS = {
-    fc: [['vi-kana', 'Nghĩa → kana', true], ['vi-kanji', 'Nghĩa → kanji', true], ['roma-kana', 'Romaji → kana', false]],
-    dict: [['audio-kana', 'Nghe → kana', false], ['kanji-kana', 'Kanji → kana', true], ['roma-kana', 'Romaji → kana', false]]
-  };
-  if (!DECKS[S.deck]) S.deck = 'n5';
-  const deck = () => DECKS[S.deck] || DECKS.n5;
+  const ANS = { vi: 'Tiếng Việt', kana: 'Kana', roma: 'Romaji' };
+  if (!DECKS[S.deck]) S.deck = 'kanji';
+  if (!ANS[S.ans]) S.ans = 'vi';
+  if (S.input !== 'hand') S.input = 'type';
+  const deck = () => DECKS[S.deck];
   const cardById = id => deck().cards().find(c => c.id === id);
-  function effPrompt() {
-    const list = PROMPTS[S.mode], sel = list.find(p => p[0] === S.prompt[S.mode]);
-    if (sel && (!sel[2] || deck().vocab)) return sel[0];
-    return S.mode === 'fc' ? 'roma-kana' : 'audio-kana';
+
+  /* ---------- chấm câu gõ phím ---------- */
+  const fold = v => String(v ?? '').normalize('NFD').replace(/\p{M}/gu, '').replace(/[đĐ]/g, 'd').toLowerCase();
+  const normVi = v => fold(v).replace(/\([^)]*\)/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
+  const normRoma = v => fold(v).replace(/[^a-z]/g, '').replace(/ou/g, 'o').replace(/([aeiou])\1+/g, '$1').replace(/m(?=[bmp])/g, 'n');
+  function viOptions(vi) {
+    const set = new Set([normVi(vi), normVi(String(vi).replace(/[()]/g, ' '))]);
+    String(vi).replace(/\([^)]*\)/g, ' ').split(/[,;\/、，]/).forEach(p => { const n = normVi(p); if (n) set.add(n); });
+    set.delete('');
+    return set;
+  }
+  function matchTyped(v) {
+    const c = cur.card;
+    if (cur.t === 'vi') { const u = normVi(v); return !!u && viOptions(c.vi).has(u); }
+    const u = normRoma(v); return !!u && c.reads.some(r => normRoma(romaji(r)) === u);
   }
 
   /* ---------- SRS ---------- */
   const DAY = 864e5;
-  const prog = () => (store.progress[S.mode] = store.progress[S.mode] || {});
+  const progKey = () => S.mode + '-' + S.ans;
+  const prog = () => (store.progress[progKey()] = store.progress[progKey()] || {});
   function schedule(s, g, now = Date.now()) {
     s = s ? { ...s } : { e: 2.5, i: 0, r: 0, d: 0 };
     if (g === 'again') { s.r = 0; s.i = 0; s.e = Math.max(1.3, s.e - 0.2); s.d = now + 60e3; return s; }
@@ -519,14 +568,13 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   let interacted = false;
 
   function plan(card) {
-    let [p, t] = effPrompt().split('-');
-    if (p === 'vi' && !card.vi) p = 'roma';
-    if (p === 'kanji' && !card.kanji) p = 'roma';
-    const useKanji = t === 'kanji' && !!card.kanji;
-    return {
-      p, t: useKanji ? 'kanji' : 'kana', target: useKanji ? card.kanji : card.kana,
-      note: t === 'kanji' && !card.kanji ? 'Từ này không có kanji, hãy viết bằng kana.' : ''
-    };
+    const t = S.ans;
+    let p = S.mode === 'fc' ? 'jp' : 'audio', note = '';
+    if (p === 'jp' && t === 'kana' && !card.kanji) { p = 'vi'; note = 'Từ này không có kanji: xem nghĩa rồi viết kana.'; }
+    if (t === 'vi' && !card.vi) note = 'Sheet chưa có nghĩa cho từ này.';
+    const m = t === 'kana' ? 'hand' : S.input;
+    const target = t === 'kana' ? card.kana : t === 'roma' ? card.roma : card.vi;
+    return { p, t, m, target, note, self: m === 'hand' && t !== 'kana' };
   }
 
   function startSession(opts = {}) {
@@ -553,7 +601,9 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     cur = { card, ...plan(card), revealed: false, hint: false };
     strokes = []; history = [];
     renderPrompt(); renderTools(); layoutGrid(); redraw(); loadGhostFont();
-    if (autoplay && cur.p === 'audio' && interacted) speak(card.kana);
+    const ti = $('#typeIn'); ti.value = ''; ti.readOnly = false; ti.classList.remove('ok', 'bad');
+    if (cur.m === 'type') setTimeout(() => { if (cur && !cur.revealed) ti.focus({ preventScroll: true }); }, 40);
+    if (autoplay && cur.p === 'audio' && interacted) speak(card.say);
   }
 
   function skipCard() {
@@ -584,13 +634,18 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   function nextCard() {
     if (!cur) return;
     if (!cur.revealed) { reveal(); return; }
+    if (cur.self) { toast('Bấm Đúng hoặc Sai trong khung đáp án.'); return; }
     grade(cur.check ? cur.check.grade : 'good');
   }
 
   function showEmpty() {
     cur = null; strokes = []; history = [];
-    $('#q').innerHTML = `<div class="empty"><b>Bộ “Từ của tôi” chưa có từ nào</b>Bấm <em>Thêm từ</em> rồi dán danh sách từ, mỗi dòng một từ.</div>
-      <div class="row"><button class="btn primary" data-act="settings">Thêm từ</button></div>`;
+    const tab = deck().tab;
+    $('#q').innerHTML = loading
+      ? `<div class="empty"><b>Đang tải dữ liệu</b>Đang lấy tab “${esc(tab)}” từ Google Sheet…</div>`
+      : dataInfo.err && !dataInfo.at
+        ? `<div class="empty"><b>Chưa tải được Google Sheet</b>${esc(dataInfo.err)}. Kiểm tra mạng rồi thử lại.</div><div class="row"><button class="btn primary" data-act="reload-data">Tải lại</button></div>`
+        : `<div class="empty"><b>Bộ ${esc(deck().name)} chưa có dữ liệu</b>Tab “${esc(tab)}” trong Sheet đang trống. Thêm từ vào Sheet rồi bấm Tải lại.</div><div class="row"><button class="btn primary" data-act="reload-data">Tải lại</button></div>`;
     $('#a').hidden = true; $('#meta').textContent = '';
     $('#promptPanel').classList.remove('revealed');
     renderTools(); layoutGrid(); redraw();
@@ -599,9 +654,14 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   function reveal() {
     if (!cur || cur.revealed) return;
     cur.revealed = true;
-    try { cur.check = checkInk(); } catch (e) { cur.check = null; }
+    if (cur.m === 'type') {
+      const ti = $('#typeIn'), v = ti.value, ok = matchTyped(v);
+      cur.check = { typed: v, ok, grade: ok ? 'good' : 'again' };
+      ti.readOnly = true; ti.classList.add(ok ? 'ok' : 'bad'); ti.blur();
+    } else if (cur.t === 'kana') { try { cur.check = checkInk(); } catch (e) { cur.check = null; } }
+    else cur.check = null;
     renderPrompt(); renderTools(); redraw();
-    if (S.mode === 'fc') speak(cur.card.kana);
+    if (S.mode === 'fc') speak(cur.card.say);
   }
 
   function grade(g) {
@@ -645,11 +705,12 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   /* ---------- rendering ---------- */
   function renderControls() {
     $('#deckSeg').innerHTML = Object.entries(DECKS).map(([k, d]) =>
-      `<button data-seg="deck" data-v="${k}" aria-pressed="${S.deck === k}"${k === 'mine' ? ' title="Đang ở bộ này thì bấm lần nữa để thêm hoặc sửa từ"' : ''}>${esc(d.name)}${k === 'mine' && S.deck === 'mine' ? ' ✎' : ''}</button>`).join('');
+      `<button data-seg="deck" data-v="${k}" aria-pressed="${S.deck === k}">${esc(d.name)}</button>`).join('');
     document.querySelectorAll('#modeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.mode));
-    const eff = effPrompt();
-    $('#promptSeg').innerHTML = PROMPTS[S.mode].map(([k, label, needVocab]) =>
-      `<button data-seg="prompt" data-v="${k}" aria-pressed="${eff === k}" ${needVocab && !deck().vocab ? 'disabled title="Chỉ dùng cho bộ từ vựng"' : ''}>${label}</button>`).join('');
+    $('#promptSeg').innerHTML = Object.entries(ANS).map(([k, l]) =>
+      `<button data-seg="ans" data-v="${k}" aria-pressed="${S.ans === k}">${l}</button>`).join('');
+    $('#inputSeg').hidden = S.ans === 'kana';
+    $('#inputSeg').innerHTML = `<button data-seg="input" data-v="type" aria-pressed="${S.input === 'type'}">⌨ Gõ phím</button><button data-seg="input" data-v="hand" aria-pressed="${S.input === 'hand'}">✎ Viết tay</button>`;
   }
 
   function renderStats() {
@@ -662,22 +723,23 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   const SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
 
   function renderPrompt() {
-    const c = cur.card, script = cur.t === 'kanji' ? 'kanji' : scriptOf(cur.target);
-    const labels = { vi: 'Nghĩa', roma: 'Romaji', kanji: 'Kanji', audio: 'Nghe' };
+    const c = cur.card, isK = S.deck === 'kanji';
+    const pl = { jp: isK ? 'Kanji' : 'Từ', vi: 'Nghĩa', audio: 'Nghe' }[cur.p];
+    const tl = cur.t === 'vi' ? 'tiếng Việt'
+      : cur.t === 'roma' ? (isK ? 'romaji (âm On hoặc Kun)' : 'romaji')
+      : (isK ? `kana (${c.readLbl})` : scriptOf(c.kana));
     let main = '';
-    if (cur.p === 'vi') main = `<div class="pm-vi">${esc(c.vi)}</div>`;
-    else if (cur.p === 'roma') main = `<div class="pm-roma">${esc(c.roma)}</div>`;
-    else if (cur.p === 'kanji') main = `<div class="pm-jp">${esc(c.kanji)}</div>`;
-    else main = `<button class="play-big" data-act="play" aria-label="Nghe từ">${SPEAKER}</button><div class="pm-cap">Chạm để nghe lại</div>`;
+    if (cur.p === 'jp') main = `<div class="pm-jp">${esc(c.word)}</div>`;
+    else if (cur.p === 'vi') main = `<div class="pm-vi">${esc(c.vi)}</div>`;
+    else main = `<button class="play-big" data-act="play" aria-label="Nghe">${SPEAKER}</button><div class="pm-cap">Chạm để nghe lại</div>`;
 
     let hint = '';
-    if (cur.p === 'vi') hint = c.hv ? `Hán Việt: ${esc(c.hv)}` : (cur.t === 'kanji' ? '' : `Romaji: ${esc(c.roma)}`);
-    else if (cur.p === 'audio' || cur.p === 'kanji') hint = `Romaji: ${esc(c.roma)}`;
-    else if (cur.p === 'roma' && c.vi) hint = `Nghĩa: ${esc(c.vi)}`;
+    if (cur.t === 'vi') hint = c.hv ? `Hán Việt: ${esc(c.hv)}` : (cur.p === 'audio' ? `Romaji: ${esc(c.roma)}` : '');
+    else if (cur.p !== 'vi' && c.vi) hint = `Nghĩa: ${esc(c.vi)}`;
 
     const showAudio = cur.p === 'audio' || cur.revealed;
     $('#q').innerHTML = `
-      <div class="eyebrow">${labels[cur.p]} → viết ${script}</div>
+      <div class="eyebrow">${pl} → viết ${tl}</div>
       ${main}
       ${cur.note ? `<div class="note">${esc(cur.note)}</div>` : ''}
       ${cur.p === 'audio' && (!hasTTS || !jaVoice) ? `<div class="note">Máy chưa có giọng tiếng Nhật nên có thể không nghe được. ${esc(voiceHelp())}</div>` : ''}
@@ -691,21 +753,40 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     const a = $('#a');
     if (cur.revealed) {
       const rows = [];
-      if (c.kanji) rows.push(['Cách đọc', `<span class="ans-kana" style="font-size:20px">${esc(c.kana)}</span>`]);
-      rows.push(['Romaji', esc(c.roma)]);
-      if (c.vi) rows.push(['Nghĩa', esc(c.vi)]);
-      if (c.hv) rows.push(['Hán Việt', esc(c.hv)]);
+      if (isK) {
+        rows.push(['Nghĩa', esc(c.vi)]);
+        if (c.hv) rows.push(['Hán Việt', esc(c.hv)]);
+        if (c.on) rows.push(['Âm On', `<span class="jp">${esc(c.on)}</span>`]);
+        if (c.kun) rows.push(['Âm Kun', `<span class="jp">${esc(c.kun)}</span>`]);
+        if (c.reads.length) rows.push(['Romaji', esc(c.reads.map(r => romaji(r)).join(' · '))]);
+        if (c.comp) rows.push(['Từ ghép', `<span class="jp">${esc(c.comp)}</span>`]);
+      } else {
+        if (c.kanji) rows.push(['Cách đọc', `<span class="ans-kana" style="font-size:20px">${esc(c.kana)}</span>`]);
+        rows.push(['Romaji', esc(c.roma)]);
+        if (c.vi) rows.push(['Nghĩa', esc(c.vi)]);
+        if (c.jlpt) rows.push(['JLPT', esc(c.jlpt)]);
+      }
       const ck = cur.check;
-      const ckHtml = !ck ? '' : ck.empty
-        ? `<div class="check g-again"><b>Máy chấm: Sai</b><ul><li>Bạn chưa viết gì trên giấy.</li></ul></div>`
-        : `<div class="check g-${ck.grade}"><b>Máy chấm: ${GRADE_VI[ck.grade]}</b>
-            ${ck.issues.length ? `<ul>${ck.issues.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : '<ul><li>Đủ nét, đúng hình chữ.</li></ul>'}
-            <span class="nums">Khớp hình ${Math.round(ck.F * 100)}% (đã tự căn giữa và chỉnh cỡ trước khi so)</span></div>`;
+      let ckHtml = '', cap = '';
+      if (cur.m === 'type') {
+        ckHtml = `<div class="check g-${ck.ok ? 'good' : 'again'}"><b>Máy chấm: ${ck.ok ? 'Đúng' : 'Sai'}</b><ul><li>Bạn gõ: “${esc(ck.typed) || '(chưa gõ gì)'}”</li></ul></div>`;
+        cap = cur.t === 'vi' ? 'Đúng khi khớp một trong các nghĩa ghi trong Sheet; không phân biệt dấu và hoa thường.' : 'Không phân biệt hoa thường; “ou”, “oo”, “o” được coi như nhau.';
+      } else if (cur.self) {
+        ckHtml = `<div class="check c-self"><b>Tự chấm</b><ul><li>Máy không đọc được chữ viết tay ${cur.t === 'vi' ? 'tiếng Việt' : 'romaji'}. So với đáp án rồi chọn:</li></ul>
+          <div class="self-grade"><button class="btn g-good" data-act="grade" data-g="good">Đúng</button><button class="btn g-again" data-act="grade" data-g="again">Sai</button></div></div>`;
+      } else {
+        ckHtml = !ck ? '' : ck.empty
+          ? `<div class="check g-again"><b>Máy chấm: Sai</b><ul><li>Bạn chưa viết gì trên giấy.</li></ul></div>`
+          : `<div class="check g-${ck.grade}"><b>Máy chấm: ${GRADE_VI[ck.grade]}</b>
+              ${ck.issues.length ? `<ul>${ck.issues.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<ul><li>Đủ nét, đúng hình chữ.</li></ul>'}
+              <span class="nums">Khớp hình ${Math.round(ck.F * 100)}% (đã tự căn giữa và chỉnh cỡ trước khi so)</span></div>`;
+        cap = 'Máy chỉ xét hình chữ và đủ nét, không trừ điểm vì chữ lệch hay to nhỏ, không kiểm tra thứ tự nét.';
+      }
       a.innerHTML = `<div class="eyebrow">Đáp án</div>
-        <div class="ans-jp">${esc(c.kanji || c.kana)}</div>
+        <div class="ans-jp">${esc(c.word)}</div>
         <dl class="ans-dl">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
         ${ckHtml}
-        <div class="pm-cap">Máy chỉ xét hình chữ và đủ nét, không trừ điểm vì chữ lệch hay to nhỏ, không kiểm tra thứ tự nét. Bấm Từ tiếp theo (hoặc Enter) để sang từ mới. Kết quả được đếm theo điểm máy chấm.</div>`;
+        ${cap ? `<div class="pm-cap">${cap} ${cur.self ? '' : 'Bấm Từ tiếp theo (hoặc Enter) để sang từ mới.'}</div>` : ''}`;
       a.hidden = false; a.classList.remove('reveal-in'); void a.offsetWidth; a.classList.add('reveal-in');
     } else a.hidden = true;
     $('#promptPanel').classList.toggle('revealed', cur.revealed);
@@ -721,9 +802,14 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     renderTally();
     $('#btnSkip').disabled = !has;
     $('#btnNext').disabled = !has;
-    $('#btnNext').textContent = has && cur.revealed ? 'Từ tiếp theo →' : 'Chấm bài';
-    const n = has ? Array.from(cur.target).length : 0;
-    $('#paperFoot').innerHTML = has ? `<span class="jp">練習</span> · ${n} ô · ${cur.t === 'kanji' ? 'kanji' : scriptOf(cur.target)}` : '';
+    $('#btnNext').textContent = has && cur.revealed ? (cur.self ? 'Chọn Đúng / Sai' : 'Từ tiếp theo →') : (has && cur.self ? 'Xem đáp án' : 'Chấm bài');
+    const typing = has && cur.m === 'type';
+    $('.desk').classList.toggle('typing', typing);
+    $('#typeBox').hidden = !typing;
+    if (typing) $('#typeCap').textContent = cur.revealed ? 'Bấm Từ tiếp theo hoặc Enter để sang từ mới.' : `Gõ ${cur.t === 'vi' ? 'nghĩa tiếng Việt (không cần dấu)' : 'romaji'} rồi bấm Enter hoặc Chấm bài.`;
+    $('#btnTrace').hidden = !(has && cur.t === 'kana');
+    const n = has && cur.t === 'kana' ? Array.from(cur.target).length : 0;
+    $('#paperFoot').innerHTML = !has ? '' : cur.t === 'kana' ? `<span class="jp">練習</span> · ${n} ô · ${scriptOf(cur.target)}` : '<span class="jp">練習</span> · viết tự do';
   }
 
   /* ---------- canvas ---------- */
@@ -741,9 +827,14 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     layoutGrid(); redraw();
   }
   function layoutGrid() {
-    const n = Math.max(1, cur ? Array.from(cur.target).length : 1);
     const foot = 22, pad = Math.max(14, Math.min(W, Hh) * 0.05);
     const aw = W - pad * 2, ah = Hh - pad * 2 - foot;
+    if (cur && cur.t !== 'kana') {
+      const size = Math.max(40, Math.min(ah / 3, aw / 4, 160));
+      grid = { size, rows: 1, cols: 1, n: 0, free: true, x: pad, y: pad };
+      return;
+    }
+    const n = Math.max(1, cur ? Array.from(cur.target).length : 1);
     let best = { size: 0, rows: 1, cols: n };
     for (let rows = 1; rows <= n; rows++) {
       const cols = Math.ceil(n / rows), size = Math.min(aw / cols, ah / rows);
@@ -769,7 +860,12 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       ctx.beginPath(); ctx.moveTo(x + s / 2, y + 4); ctx.lineTo(x + s / 2, y + s - 4); ctx.moveTo(x + 4, y + s / 2); ctx.lineTo(x + s - 4, y + s / 2); ctx.stroke();
     }
     ctx.globalAlpha = 1; ctx.setLineDash([]);
-    if (cur && (cur.revealed || S.trace)) {
+    if (grid.free) {
+      ctx.globalAlpha = 0.35; ctx.setLineDash([4, 6]); ctx.lineWidth = 1;
+      for (let y = grid.y + s; y < Hh - 26; y += s) { ctx.beginPath(); ctx.moveTo(grid.x, y); ctx.lineTo(W - grid.x, y); ctx.stroke(); }
+      ctx.globalAlpha = 1; ctx.setLineDash([]);
+    }
+    if (cur && !grid.free && (cur.revealed || S.trace)) {
       const chars = Array.from(cur.target);
       ctx.fillStyle = cur.revealed ? css('--accent') : css('--ink');
       ctx.globalAlpha = cur.revealed ? 0.4 : 0.13;
@@ -1010,9 +1106,9 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && interacted) requestWake(); });
 
   function openSheet() {
-    $('#mineText').value = store.mine; $('#newPer').value = String(S.newPer);
-    $('#mineStatus').textContent = ''; resetRowDefault(); pickVoice();
-    $('#sheet').hidden = false; $('#mineText').focus({ preventScroll: true });
+    $('#newPer').value = String(S.newPer);
+    resetRowDefault(); pickVoice(); renderDataNote();
+    $('#sheet').hidden = false;
   }
   function closeSheet() { $('#sheet').hidden = true; }
   function resetRowDefault() { $('#resetRow').innerHTML = '<button class="btn danger" data-act="reset">Xoá tiến độ bộ này</button>'; }
@@ -1024,9 +1120,9 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       noteInteraction();
       const k = seg.dataset.seg, v = seg.dataset.v;
       if (k === 'deck' && S.deck !== v) { S.deck = v; save(); startSession(); }
-      else if (k === 'deck' && v === 'mine') openSheet();
       else if (k === 'mode' && S.mode !== v) { S.mode = v; save(); startSession(); }
-      else if (k === 'prompt') { S.prompt[S.mode] = v; save(); renderControls(); if (cur) showCard(); }
+      else if (k === 'ans' && S.ans !== v) { S.ans = v; save(); startSession(); }
+      else if (k === 'input' && S.input !== v) { S.input = v; save(); renderControls(); if (cur && !cur.revealed) { showCard(false); resize(); } }
       return;
     }
     const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
@@ -1042,30 +1138,22 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       case 'clear': clearInk(); break;
       case 'trace': S.trace = !S.trace; save(); renderTools(); redraw(); break;
       case 'pen': S.penOnly = !S.penOnly; S.penAuto = true; save(); renderTools(); toast(S.penOnly ? 'Chỉ Apple Pencil mới vẽ được.' : 'Ngón tay cũng vẽ được.'); break;
-      case 'play': if (cur) speak(cur.card.kana); break;
-      case 'slow': if (cur) speak(cur.card.kana, 0.55); break;
+      case 'play': if (cur) speak(cur.card.say); break;
+      case 'slow': if (cur) speak(cur.card.say, 0.55); break;
+      case 'reload-data': loadData(true).then(() => startSession()); if (!cur) showEmpty(); break;
       case 'hint': if (cur) { cur.hint = true; renderPrompt(); } break;
       case 'settings': openSheet(); break;
       case 'close-settings': closeSheet(); break;
       case 'test-voice': speak('こんにちは、にほんご'); break;
       case 'more-new': startSession(); break;
       case 'free': startSession({ free: true }); break;
-      case 'save-mine': {
-        const text = $('#mineText').value, { cards, bad } = parseMine(text);
-        store.mine = text; MINE = cards; save();
-        const st = $('#mineStatus');
-        st.className = 'status' + (bad.length ? ' err' : '');
-        st.textContent = `Đã lưu ${cards.length} từ.` + (bad.length ? ` Bỏ qua dòng ${bad.slice(0, 6).join(', ')}${bad.length > 6 ? '…' : ''}: phần đầu phải là kana.` : '');
-        if (S.deck === 'mine') startSession(); else renderStats();
-        break;
-      }
       case 'reset':
         $('#resetRow').innerHTML = `<span class="meta" style="align-self:center">Xoá tiến độ bộ ${esc(deck().name)}?</span>
           <button class="btn danger" data-act="reset-yes">Xoá</button><button class="btn" data-act="reset-no">Huỷ</button>`;
         break;
       case 'reset-yes': {
         const ids = new Set(deck().cards().map(c => c.id));
-        ['fc', 'dict'].forEach(m => { const p = store.progress[m]; if (p) Object.keys(p).forEach(id => { if (ids.has(id)) delete p[id]; }); });
+        Object.values(store.progress).forEach(p => { if (p) Object.keys(p).forEach(id => { if (ids.has(id)) delete p[id]; }); });
         save(); resetRowDefault(); toast(`Đã xoá tiến độ bộ ${deck().name}.`); startSession();
         break;
       }
@@ -1073,6 +1161,11 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     }
   });
   $('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeSheet(); });
+  $('#typeIn').addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault(); noteInteraction();
+    if (cur && !cur.revealed) reveal(); else nextCard();
+  });
   $('#newPer').addEventListener('change', e => { S.newPer = +e.target.value || 10; save(); });
 
   document.addEventListener('keydown', e => {
@@ -1080,12 +1173,12 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     if (!$('#sheet').hidden) { if (e.key === 'Escape') closeSheet(); return; }
     if (e.key === ' ' || e.key === 'Enter') {
       if (cur && !cur.revealed) { e.preventDefault(); reveal(); }
-      else if (e.key === 'Enter' && cur && cur.revealed && cur.check) { e.preventDefault(); grade(cur.check.grade); }
+      else if (e.key === 'Enter' && cur && cur.revealed && cur.check && !cur.self) { e.preventDefault(); grade(cur.check.grade); }
       return;
     }
     if (cur && cur.revealed && '1234'.includes(e.key)) { e.preventDefault(); grade(['again', 'hard', 'good', 'easy'][+e.key - 1]); return; }
     if ((e.key === 'z' && (e.metaKey || e.ctrlKey)) || e.key === 'Backspace') { e.preventDefault(); undo(); return; }
-    if (e.key === 'p' && cur) speak(cur.card.kana);
+    if (e.key === 'p' && cur) speak(cur.card.say);
     if (e.key === 'n' && cur) nextCard();
     if (e.key === 's' && cur) skipCard();
   });
@@ -1095,8 +1188,18 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   new MutationObserver(themeRedraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   new ResizeObserver(resize).observe(wrap);
 
-  startSession();
   resize();
+  if (DATA.kanji.length || DATA.vocab.length) {
+    startSession();
+    const before = deck().cards().map(c => c.id).join('|');
+    loadData().then(() => {
+      if (deck().cards().map(c => c.id).join('|') !== before && !Object.keys(session.first).length && !strokes.length && !(cur && $('#typeIn').value)) startSession();
+      else renderStats();
+    });
+  } else {
+    renderControls(); showEmpty();
+    loadData().then(() => startSession());
+  }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
 })();
 </script>
