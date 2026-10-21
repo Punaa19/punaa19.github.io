@@ -700,13 +700,13 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       const ckHtml = !ck ? '' : ck.empty
         ? `<div class="check g-again"><b>Máy chấm: Sai</b><ul><li>Bạn chưa viết gì trên giấy.</li></ul></div>`
         : `<div class="check g-${ck.grade}"><b>Máy chấm: ${GRADE_VI[ck.grade]}</b>
-            ${ck.issues.length ? `<ul>${ck.issues.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : '<ul><li>Đúng vị trí, đúng cỡ, nét khớp mẫu.</li></ul>'}
-            <span class="nums">Khớp nét ${Math.round(ck.F * 100)}% · lệch tâm ${Math.round(ck.off * 100)}% ô · cỡ ${Math.round(ck.size * 100)}% mẫu</span></div>`;
+            ${ck.issues.length ? `<ul>${ck.issues.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : '<ul><li>Đủ nét, đúng hình chữ.</li></ul>'}
+            <span class="nums">Khớp hình ${Math.round(ck.F * 100)}% (đã tự căn giữa và chỉnh cỡ trước khi so)</span></div>`;
       a.innerHTML = `<div class="eyebrow">Đáp án</div>
         <div class="ans-jp">${esc(c.kanji || c.kana)}</div>
         <dl class="ans-dl">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
         ${ckHtml}
-        <div class="pm-cap">Máy chỉ so hình dạng, vị trí và cỡ chữ với mẫu, không kiểm tra thứ tự nét. Bấm Từ tiếp theo (hoặc Enter) để sang từ mới. Kết quả được đếm theo điểm máy chấm.</div>`;
+        <div class="pm-cap">Máy chỉ xét hình chữ và đủ nét, không trừ điểm vì chữ lệch hay to nhỏ, không kiểm tra thứ tự nét. Bấm Từ tiếp theo (hoặc Enter) để sang từ mới. Kết quả được đếm theo điểm máy chấm.</div>`;
       a.hidden = false; a.classList.remove('reveal-in'); void a.offsetWidth; a.classList.add('reveal-in');
     } else a.hidden = true;
     $('#promptPanel').classList.toggle('revealed', cur.revealed);
@@ -864,7 +864,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     if (!cur) return null;
     const drawn = strokes.filter(s => s.pts.length);
     if (!drawn.length) return { empty: true, grade: 'again' };
-    const N = 96, cols = grid.cols, rows = grid.rows, w = cols * N, h = rows * N, r = Math.round(N * 0.035);
+    const N = 96, cols = grid.cols, rows = grid.rows, w = cols * N, h = rows * N, r = Math.round(N * 0.05);
     const mk = () => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c.getContext('2d', { willReadFrequently: true }); };
     const t = mk(), td = mk(), u = mk(), ud = mk();
     const offs = [[0, 0]];
@@ -875,58 +875,62 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       t.fillText(ch, cx, cy);
       offs.forEach(([dx, dy]) => td.fillText(ch, cx + dx, cy + dy));
     });
+    const px = c => c.getImageData(0, 0, w, h).data;
+    const T = px(t), TD = px(td);
+    // khung chữ mẫu
+    const bt = [w, h, -1, -1];
+    for (let i = 3, k = 0; i < T.length; i += 4, k++) if (T[i] > 100) { const x = k % w, y = (k / w) | 0; if (x < bt[0]) bt[0] = x; if (y < bt[1]) bt[1] = y; if (x > bt[2]) bt[2] = x; if (y > bt[3]) bt[3] = y; }
+    if (bt[2] < 0) return null;
+    // khung nét người viết (tính cả độ dày nét)
+    const bu = [Infinity, Infinity, -Infinity, -Infinity];
+    drawn.forEach(st => st.pts.forEach(p => { const x = p.x * N, y = p.y * N, e = p.w * N / 2; bu[0] = Math.min(bu[0], x - e); bu[1] = Math.min(bu[1], y - e); bu[2] = Math.max(bu[2], x + e); bu[3] = Math.max(bu[3], y + e); }));
+    const tw = bt[2] - bt[0] + 1, th = bt[3] - bt[1] + 1, uw = Math.max(1, bu[2] - bu[0]), uh = Math.max(1, bu[3] - bu[1]);
+    const off = Math.hypot(((bu[0] + bu[2]) - (bt[0] + bt[2])) / 2 / N, ((bu[1] + bu[3]) - (bt[1] + bt[3])) / 2 / N);
+    const size = Math.sqrt((uw * uh) / (tw * th));
+    // căn nét người viết về cùng vị trí, cùng cỡ với mẫu (giữ tỉ lệ ngang/dọc gần đúng)
+    let sx = tw / uw, sy = th / uh;
+    const g0 = Math.sqrt(sx * sy); sx = Math.min(Math.max(sx, g0 / 1.35), g0 * 1.35); sy = Math.min(Math.max(sy, g0 / 1.35), g0 * 1.35);
+    const ucx = (bu[0] + bu[2]) / 2, ucy = (bu[1] + bu[3]) / 2, tcx = (bt[0] + bt[2]) / 2, tcy = (bt[1] + bt[3]) / 2;
+    const X = p => tcx + (p.x * N - ucx) * sx, Y = p => tcy + (p.y * N - ucy) * sy;
+    const lw = p => Math.max(2, p.w * N * Math.sqrt(sx * sy));
     const ink = (c, extra) => {
       c.lineCap = 'round'; c.lineJoin = 'round';
       drawn.forEach(st => {
         const p = st.pts;
-        c.beginPath(); c.arc(p[0].x * N, p[0].y * N, (p[0].w * N + extra) / 2, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(X(p[0]), Y(p[0]), (lw(p[0]) + extra) / 2, 0, Math.PI * 2); c.fill();
         for (let i = 1; i < p.length; i++) {
-          c.lineWidth = ((p[i - 1].w + p[i].w) / 2) * N + extra;
-          c.beginPath(); c.moveTo(p[i - 1].x * N, p[i - 1].y * N); c.lineTo(p[i].x * N, p[i].y * N); c.stroke();
+          c.lineWidth = (lw(p[i - 1]) + lw(p[i])) / 2 + extra;
+          c.beginPath(); c.moveTo(X(p[i - 1]), Y(p[i - 1])); c.lineTo(X(p[i]), Y(p[i])); c.stroke();
         }
       });
     };
     ink(u, 0); ink(ud, 2 * r);
-    const px = c => c.getImageData(0, 0, w, h).data;
-    const T = px(t), TD = px(td), U = px(u), UD = px(ud);
+    const U = px(u), UD = px(ud);
     let nt = 0, nu = 0, rec = 0, prec = 0;
     const zt = {}, zr = {};
-    const bt = [w, h, -1, -1], bu = [w, h, -1, -1];
-    const grow = (b, x, y) => { if (x < b[0]) b[0] = x; if (y < b[1]) b[1] = y; if (x > b[2]) b[2] = x; if (y > b[3]) b[3] = y; };
     for (let i = 3, k = 0; i < T.length; i += 4, k++) {
       const x = k % w, y = (k / w) | 0;
       if (T[i] > 100) {
-        nt++; grow(bt, x, y);
+        nt++;
         const z = (Math.floor(y / N) * cols + Math.floor(x / N)) * 9 + Math.min(2, Math.floor((y % N) / (N / 3))) * 3 + Math.min(2, Math.floor((x % N) / (N / 3)));
         zt[z] = (zt[z] || 0) + 1;
         if (UD[i] > 100) { rec++; zr[z] = (zr[z] || 0) + 1; }
       }
-      if (U[i] > 100) { nu++; grow(bu, x, y); if (TD[i] > 100) prec++; }
+      if (U[i] > 100) { nu++; if (TD[i] > 100) prec++; }
     }
     if (!nt || !nu) return { empty: true, grade: 'again' };
     const R = rec / nt, P = prec / nu, F = 2 * R * P / (R + P || 1);
-    const dx = ((bu[0] + bu[2]) - (bt[0] + bt[2])) / 2 / N, dy = ((bu[1] + bu[3]) - (bt[1] + bt[3])) / 2 / N;
-    const size = Math.sqrt(((bu[2] - bu[0] + 1) * (bu[3] - bu[1] + 1)) / ((bt[2] - bt[0] + 1) * (bt[3] - bt[1] + 1)));
-    const off = Math.hypot(dx, dy);
     const nChars = Array.from(cur.target).length;
-    const missing = Object.keys(zt).map(Number).filter(z => zt[z] > (nt / nChars) * 0.06 && (zr[z] || 0) / zt[z] < 0.3);
-    let g = F >= 0.82 ? 3 : F >= 0.65 ? 2 : F >= 0.55 ? 1 : 0;
-    if (R < 0.6 || P < 0.5 || missing.length) g = 0;
-    if (off > 0.15 || size < 0.7 || size > 1.35) g = 0;
-    else if (off > 0.1 || size < 0.8 || size > 1.2) g = Math.min(g, 1);
+    const missing = Object.keys(zt).map(Number).filter(z => zt[z] > (nt / nChars) * 0.06 && (zr[z] || 0) / zt[z] < 0.25);
+    let g = F >= 0.8 ? 3 : F >= 0.6 ? 2 : F >= 0.45 ? 1 : 0;
+    if (R < 0.5 || P < 0.4 || missing.length) g = 0;
     const issues = [];
     if (missing.length) {
       const zn = z => { const c = Math.floor(z / 9), k = z % 9; return `${nChars > 1 ? `chữ thứ ${c + 1}, ` : ''}phần ${['trên', 'giữa', 'dưới'][Math.floor(k / 3)]} ${['bên trái', 'chính giữa', 'bên phải'][k % 3]}`; };
       issues.push(`Thiếu nét ở ${missing.slice(0, 3).map(zn).join('; ')}${missing.length > 3 ? '…' : ''}.`);
     }
-    if (off > 0.1) {
-      const dir = [dy < -0.04 ? 'lên trên' : dy > 0.04 ? 'xuống dưới' : '', dx < -0.04 ? 'sang trái' : dx > 0.04 ? 'sang phải' : ''].filter(Boolean).join(' và ');
-      issues.push(`Chữ lệch ${dir || 'khỏi tâm'} ${Math.round(off * 100)}% ô so với mẫu.`);
-    }
-    if (size > 1.2) issues.push(`Chữ to hơn mẫu ${Math.round((size - 1) * 100)}%.`);
-    if (size < 0.8) issues.push(`Chữ nhỏ hơn mẫu ${Math.round((1 - size) * 100)}%.`);
-    if (R < 0.6) issues.push('Nhiều phần của chữ mẫu không có nét của bạn: thiếu nét hoặc nét sai chỗ.');
-    if (P < 0.6) issues.push('Nhiều nét của bạn nằm ngoài chữ mẫu: thừa nét hoặc nét lệch.');
+    if (!missing.length && R < 0.6) issues.push('Nhiều phần của chữ mẫu không có nét của bạn: thiếu nét hoặc sai hình.');
+    if (P < 0.55) issues.push('Nhiều nét của bạn không khớp hình chữ mẫu: thừa nét hoặc sai chữ.');
     return { F, R, P, off, size, grade: GRADES[g], issues };
   }
 
