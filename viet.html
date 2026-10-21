@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#2f4a9e">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>Renshūchō 練習帳</title>
+<title>Renshūchō Kanji 練習帳</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Klee+One:wght@400;600&display=swap">
@@ -254,7 +254,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   <header class="top">
     <a class="brand" href="index.html" title="Về trang chủ">
       <div class="mark" aria-hidden="true"><span>練</span></div>
-      <div><b>Renshūchō</b><small>Vở luyện viết tiếng Nhật</small></div>
+      <div><b>Renshūchō Kanji</b><small>Kiểm tra viết từ vựng và kanji</small></div>
     </a>
     <div class="stats" id="stats"></div>
     <button class="icon-btn gear" data-act="settings" id="btnSettings" title="Cài đặt" aria-label="Cài đặt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
@@ -349,7 +349,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(LS)) || {}; } catch (e) { saved = {}; }
   const store = { progress: saved.progress || {}, mine: saved.mine || '', settings: saved.settings || {} };
-  const S = Object.assign({ deck: 'hira', mode: 'fc', newPer: 10, trace: false, penOnly: false, penAuto: false, shuffle: false }, store.settings);
+  const S = Object.assign({ deck: 'n5', mode: 'fc', newPer: 10, trace: false, penOnly: false, penAuto: false, shuffle: false }, store.settings);
   S.prompt = Object.assign({ fc: 'vi-kana', dict: 'audio-kana' }, store.settings.prompt || {});
   store.settings = S;
   function save() { try { localStorage.setItem(LS, JSON.stringify(store)); } catch (e) {} }
@@ -477,8 +477,6 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   MINE = parseMine(store.mine).cards;
 
   const DECKS = {
-    hira: { name: 'Hiragana', vocab: false, cards: () => HIRA },
-    kata: { name: 'Katakana', vocab: false, cards: () => KATA },
     n5: { name: 'Từ N5', vocab: true, cards: () => N5 },
     mine: { name: 'Từ của tôi', vocab: true, cards: () => MINE }
   };
@@ -486,7 +484,8 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     fc: [['vi-kana', 'Nghĩa → kana', true], ['vi-kanji', 'Nghĩa → kanji', true], ['roma-kana', 'Romaji → kana', false]],
     dict: [['audio-kana', 'Nghe → kana', false], ['kanji-kana', 'Kanji → kana', true], ['roma-kana', 'Romaji → kana', false]]
   };
-  const deck = () => DECKS[S.deck] || DECKS.hira;
+  if (!DECKS[S.deck]) S.deck = 'n5';
+  const deck = () => DECKS[S.deck] || DECKS.n5;
   const cardById = id => deck().cards().find(c => c.id === id);
   function effPrompt() {
     const list = PROMPTS[S.mode], sel = list.find(p => p[0] === S.prompt[S.mode]);
