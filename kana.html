@@ -53,6 +53,8 @@ header p { margin: 4px 0 0; color: var(--muted); max-width: 65ch; }
 .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
 @media (min-width: 980px) { .layout { grid-template-columns: minmax(360px, 5fr) minmax(0, 7fr); } .drill { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); } }
 
+.layout.chart-hidden .chart { display: none; }
+@media (min-width: 980px) { .layout.chart-hidden { grid-template-columns: minmax(0, 760px); justify-content: center; } .layout.chart-hidden .drill { position: static; } }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); }
 .drill { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
 .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -156,7 +158,7 @@ td { padding: 0; }
     <p>Nhìn chữ rồi gõ romaji, gõ đúng là tự sang chữ tiếp. Luyện một hàng tới khi hết sai rồi mới thêm hàng mới. Chữ bạn hay sai sẽ quay lại nhiều hơn.</p>
   </header>
 
-  <div class="layout">
+  <div class="layout" id="layout">
     <section class="panel drill" aria-label="Luyện tập">
       <div class="bar">
         <div class="seg" role="group" aria-label="Chế độ">
@@ -166,6 +168,7 @@ td { padding: 0; }
         <div class="spacer"></div>
         <button class="toggle" id="tAuto" data-act="auto">Tự đọc</button>
         <button class="toggle" id="tFont" data-act="fontname">Tên phông</button>
+        <button class="toggle" id="tChart" data-act="chart" title="Ẩn bảng chữ bên cạnh để không nhìn thấy đáp án">Ẩn bảng chữ</button>
       </div>
 
       <div class="stage" id="stage">
@@ -200,7 +203,7 @@ td { padding: 0; }
       <div class="group">
         <div class="group-head"><h3>Phông chữ</h3><div class="links"><button class="link" data-act="fonts-all">Chọn hết</button><button class="link" data-act="fonts-none">Bỏ hết</button></div></div>
         <div class="fonts" id="fonts"></div>
-        <p class="note">Mỗi lượt chữ hiện bằng một phông ngẫu nhiên trong số đã chọn, để bạn quen cả chữ in lẫn chữ viết tay. Các phông đánh dấu <b>khó</b> là kiểu viết tay, người mới nên để sau.</p>
+        <p class="note">Mỗi lượt chữ hiện bằng một phông ngẫu nhiên trong số đã chọn.</p>
       </div>
       <p class="note">Gõ được cả kiểu Kunrei: <b>si, ti, tu, hu, zi, sya, tya, zya</b>… Chữ <b>ん</b> gõ n hoặc nn, <b>を</b> gõ wo hoặc o. Sai thì nhấn Enter để xem đáp án, gõ lại đúng hoặc nhấn Enter lần nữa để sang chữ mới.</p>
     </section>
@@ -260,10 +263,7 @@ td { padding: 0; }
   })));
 
   const FONTS = [
-    ['Noto Sans JP', 'Gothic chuẩn', 0], ['Noto Serif JP', 'Mincho', 0], ['Klee One', 'Chữ sách giáo khoa', 0], ['Zen Maru Gothic', 'Bo tròn', 0],
-    ['Shippori Mincho', 'Mincho cổ', 0], ['Kaisei Decol', 'Trang trí', 0], ['M PLUS Rounded 1c', 'Tròn mảnh', 0], ['RocknRoll One', 'Đậm vui', 0],
-    ['Mochiy Pop One', 'Pop', 0], ['DotGothic16', 'Điểm ảnh', 0], ['Dela Gothic One', 'Rất đậm', 0], ['Yusei Magic', 'Bút dạ', 0],
-    ['Yomogi', 'Viết tay', 1], ['Zen Kurenaido', 'Bút lông mềm', 1], ['Hachi Maru Pop', 'Viết tay tròn', 1], ['Yuji Syuku', 'Thư pháp', 1]
+    ['Noto Serif JP', 'Mincho', 0], ['Klee One', 'Chữ sách giáo khoa', 0], ['Zen Maru Gothic', 'Bo tròn', 0]
   ];
   (function loadFonts() {
     let chars = '';
@@ -279,11 +279,12 @@ td { padding: 0; }
   try { st = JSON.parse(localStorage.getItem(LS)) || {}; } catch (e) { st = {}; }
   const S = {
     sel: st.sel || ['h:basic:a', 'h:basic:ka'],
-    fonts: st.fonts || FONTS.filter(f => !f[2]).map(f => f[0]),
+    fonts: (st.fonts || []).filter(f => FONTS.some(x => x[0] === f)),
     stats: st.stats || {}, mode: st.mode || 'see', script: st.script || 'h',
-    auto: st.auto ?? true, fontName: st.fontName ?? true
+    auto: st.auto ?? true, fontName: st.fontName ?? true, hideChart: !!st.hideChart
   };
   function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+  if (!S.fonts.length) S.fonts = FONTS.map(f => f[0]);
 
   /* ---------- drill ---------- */
   let cur = null, last = null, pending = [], fontReq = 0;
@@ -315,7 +316,7 @@ td { padding: 0; }
       $('#fontLabel').textContent = ''; $('#peekHint').hidden = true; return;
     }
     const item = pick(items);
-    const fonts = S.fonts.length ? S.fonts : ['Noto Sans JP'];
+    const fonts = S.fonts.length ? S.fonts : ['Klee One'];
     cur = { ...item, font: fonts[Math.floor(Math.random() * fonts.length)], missed: false, done: false };
     last = item.k;
     render();
@@ -502,6 +503,7 @@ td { padding: 0; }
       case 'peek': case 'skip': if (cur && !cur.done) { if (cur.missed) next(); else wrong('peek'); } ans.focus(); break;
       case 'speak': if (cur) speak(cur.k); ans.focus(); break;
       case 'auto': S.auto = !S.auto; save(); syncToggles(); break;
+      case 'chart': S.hideChart = !S.hideChart; save(); syncToggles(); ans.focus({ preventScroll: true }); break;
       case 'fontname': S.fontName = !S.fontName; save(); syncToggles(); if (cur) $('#fontLabel').textContent = S.fontName && !(S.mode === 'hear' && !cur.missed && !cur.done) ? cur.font : ''; break;
       case 'fonts-all': S.fonts = FONTS.map(f => f[0]); save(); renderFonts(); break;
       case 'fonts-none': S.fonts = []; save(); renderFonts(); break;
@@ -515,6 +517,9 @@ td { padding: 0; }
     document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === S.mode));
     $('#tAuto').setAttribute('aria-pressed', S.auto);
     $('#tFont').setAttribute('aria-pressed', S.fontName);
+    $('#tChart').textContent = S.hideChart ? 'Hiện bảng chữ' : 'Ẩn bảng chữ';
+    $('#tChart').setAttribute('aria-pressed', S.hideChart);
+    $('#layout').classList.toggle('chart-hidden', S.hideChart);
   }
 
   syncToggles(); renderChart(); renderFonts(); renderStats(); next();
