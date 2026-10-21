@@ -158,6 +158,11 @@ a.icon-btn { text-decoration: none; color: var(--ink); display: inline-flex; ali
 .grade span { font-size: 12px; opacity: .85; }
 .g-again { --c: var(--again); } .g-hard { --c: var(--hard); } .g-good { --c: var(--good); } .g-easy { --c: var(--easy); }
 .grade { color: var(--c); background: color-mix(in srgb, var(--c) 11%, var(--paper)); border: 1px solid color-mix(in srgb, var(--c) 38%, transparent); }
+.grade.suggest { outline: 3px solid var(--c); outline-offset: 2px; }
+.check { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; color: var(--c); background: color-mix(in srgb, var(--c) 10%, var(--paper)); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); }
+.check b { font-size: 15px; }
+.check ul { margin: 0; padding-left: 18px; color: var(--ink); font-size: 13.5px; }
+.check .nums { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* Done */
 .done { position: absolute; inset: 0; background: var(--bg); display: grid; place-items: center; z-index: 2; padding: 12px; }
@@ -546,6 +551,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   function reveal() {
     if (!cur || cur.revealed) return;
     cur.revealed = true;
+    try { cur.check = checkInk(); } catch (e) { cur.check = null; }
     renderPrompt(); renderTools(); redraw();
     if (S.mode === 'fc') speak(cur.card.kana);
   }
@@ -640,10 +646,17 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       rows.push(['Romaji', esc(c.roma)]);
       if (c.vi) rows.push(['Nghĩa', esc(c.vi)]);
       if (c.hv) rows.push(['Hán Việt', esc(c.hv)]);
+      const ck = cur.check;
+      const ckHtml = !ck ? '' : ck.empty
+        ? `<div class="check g-again"><b>Máy chấm: Sai</b><ul><li>Bạn chưa viết gì trên giấy.</li></ul></div>`
+        : `<div class="check g-${ck.grade}"><b>Máy chấm: ${GRADE_VI[ck.grade]}</b>
+            ${ck.issues.length ? `<ul>${ck.issues.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : '<ul><li>Đúng vị trí, đúng cỡ, nét khớp mẫu.</li></ul>'}
+            <span class="nums">Khớp nét ${Math.round(ck.F * 100)}% · lệch tâm ${Math.round(ck.off * 100)}% ô · cỡ ${Math.round(ck.size * 100)}% mẫu</span></div>`;
       a.innerHTML = `<div class="eyebrow">Đáp án</div>
         <div class="ans-jp">${esc(c.kanji || c.kana)}</div>
         <dl class="ans-dl">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
-        <div class="pm-cap">So nét của bạn với chữ mẫu màu xanh trên giấy, rồi tự chấm.</div>`;
+        ${ckHtml}
+        <div class="pm-cap">Máy chỉ so hình dạng, vị trí và cỡ chữ với mẫu, không kiểm tra thứ tự nét. Nhấn Enter để nhận điểm máy chấm, hoặc tự chọn nút khác.</div>`;
       a.hidden = false; a.classList.remove('reveal-in'); void a.offsetWidth; a.classList.add('reveal-in');
     } else a.hidden = true;
     $('#promptPanel').classList.toggle('revealed', cur.revealed);
@@ -665,6 +678,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
         $('#iv-' + g).textContent = session.free ? (g === 'again' ? 'làm lại' : 'tiếp') : fmtSpan(schedule(p, g, now).d - now);
       });
     }
+    document.querySelectorAll('.grade').forEach(b => b.classList.toggle('suggest', !!(has && cur.revealed && cur.check && cur.check.grade === b.dataset.g)));
     const n = has ? Array.from(cur.target).length : 0;
     $('#paperFoot').innerHTML = has ? `<span class="jp">練習</span> · ${n} ô · ${cur.t === 'kanji' ? 'kanji' : scriptOf(cur.target)}` : '';
   }
@@ -799,6 +813,66 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     if (!strokes.length) return;
     history.push({ type: 'clear', prev: strokes }); strokes = []; redraw();
   }
+  /* ---------- auto check ---------- */
+  const GRADES = ['again', 'hard', 'good', 'easy'];
+  const GRADE_VI = { again: 'Sai', hard: 'Khó', good: 'Đúng', easy: 'Dễ' };
+  function checkInk() {
+    if (!cur) return null;
+    const drawn = strokes.filter(s => s.pts.length);
+    if (!drawn.length) return { empty: true, grade: 'again' };
+    const N = 96, cols = grid.cols, rows = grid.rows, w = cols * N, h = rows * N, r = Math.round(N * 0.035);
+    const mk = () => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c.getContext('2d', { willReadFrequently: true }); };
+    const t = mk(), td = mk(), u = mk(), ud = mk();
+    const offs = [[0, 0]];
+    for (let a = 0; a < 16; a++) offs.push([Math.cos(a * Math.PI / 8) * r, Math.sin(a * Math.PI / 8) * r]);
+    [t, td].forEach(c => { c.font = `400 ${Math.round(N * 0.76)}px "Klee One", "Hiragino Mincho ProN", serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; });
+    Array.from(cur.target).forEach((ch, i) => {
+      const cx = (i % cols) * N + N / 2, cy = Math.floor(i / cols) * N + N / 2 + N * 0.03;
+      t.fillText(ch, cx, cy);
+      offs.forEach(([dx, dy]) => td.fillText(ch, cx + dx, cy + dy));
+    });
+    const ink = (c, extra) => {
+      c.lineCap = 'round'; c.lineJoin = 'round';
+      drawn.forEach(st => {
+        const p = st.pts;
+        c.beginPath(); c.arc(p[0].x * N, p[0].y * N, (p[0].w * N + extra) / 2, 0, Math.PI * 2); c.fill();
+        for (let i = 1; i < p.length; i++) {
+          c.lineWidth = ((p[i - 1].w + p[i].w) / 2) * N + extra;
+          c.beginPath(); c.moveTo(p[i - 1].x * N, p[i - 1].y * N); c.lineTo(p[i].x * N, p[i].y * N); c.stroke();
+        }
+      });
+    };
+    ink(u, 0); ink(ud, 2 * r);
+    const px = c => c.getImageData(0, 0, w, h).data;
+    const T = px(t), TD = px(td), U = px(u), UD = px(ud);
+    let nt = 0, nu = 0, rec = 0, prec = 0;
+    const bt = [w, h, -1, -1], bu = [w, h, -1, -1];
+    const grow = (b, x, y) => { if (x < b[0]) b[0] = x; if (y < b[1]) b[1] = y; if (x > b[2]) b[2] = x; if (y > b[3]) b[3] = y; };
+    for (let i = 3, k = 0; i < T.length; i += 4, k++) {
+      const x = k % w, y = (k / w) | 0;
+      if (T[i] > 100) { nt++; grow(bt, x, y); if (UD[i] > 100) rec++; }
+      if (U[i] > 100) { nu++; grow(bu, x, y); if (TD[i] > 100) prec++; }
+    }
+    if (!nt || !nu) return { empty: true, grade: 'again' };
+    const R = rec / nt, P = prec / nu, F = 2 * R * P / (R + P || 1);
+    const dx = ((bu[0] + bu[2]) - (bt[0] + bt[2])) / 2 / N, dy = ((bu[1] + bu[3]) - (bt[1] + bt[3])) / 2 / N;
+    const size = Math.sqrt(((bu[2] - bu[0] + 1) * (bu[3] - bu[1] + 1)) / ((bt[2] - bt[0] + 1) * (bt[3] - bt[1] + 1)));
+    const off = Math.hypot(dx, dy);
+    let g = F >= 0.85 ? 3 : F >= 0.68 ? 2 : F >= 0.5 ? 1 : 0;
+    if (off > 0.12 || size < 0.8 || size > 1.2) g = 0;
+    else if (off > 0.06 || size < 0.9 || size > 1.1) g = Math.min(g, 1);
+    const issues = [];
+    if (off > 0.06) {
+      const dir = [dy < -0.04 ? 'lên trên' : dy > 0.04 ? 'xuống dưới' : '', dx < -0.04 ? 'sang trái' : dx > 0.04 ? 'sang phải' : ''].filter(Boolean).join(' và ');
+      issues.push(`Chữ lệch ${dir || 'khỏi tâm'} ${Math.round(off * 100)}% ô so với mẫu.`);
+    }
+    if (size > 1.1) issues.push(`Chữ to hơn mẫu ${Math.round((size - 1) * 100)}%.`);
+    if (size < 0.9) issues.push(`Chữ nhỏ hơn mẫu ${Math.round((1 - size) * 100)}%.`);
+    if (R < 0.6) issues.push('Nhiều phần của chữ mẫu không có nét của bạn: thiếu nét hoặc nét sai chỗ.');
+    if (P < 0.6) issues.push('Nhiều nét của bạn nằm ngoài chữ mẫu: thừa nét hoặc nét lệch.');
+    return { F, R, P, off, size, grade: GRADES[g], issues };
+  }
+
   function loadGhostFont() {
     if (!cur || !document.fonts || !document.fonts.load) return;
     document.fonts.load('400 40px "Klee One"', cur.target).then(redraw).catch(() => {});
@@ -940,7 +1014,11 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   document.addEventListener('keydown', e => {
     if (e.target.closest('textarea, input, select')) return;
     if (!$('#sheet').hidden) { if (e.key === 'Escape') closeSheet(); return; }
-    if (e.key === ' ' || e.key === 'Enter') { if (cur && !cur.revealed) { e.preventDefault(); reveal(); } return; }
+    if (e.key === ' ' || e.key === 'Enter') {
+      if (cur && !cur.revealed) { e.preventDefault(); reveal(); }
+      else if (e.key === 'Enter' && cur && cur.revealed && cur.check) { e.preventDefault(); grade(cur.check.grade); }
+      return;
+    }
     if (cur && cur.revealed && '1234'.includes(e.key)) { e.preventDefault(); grade(['again', 'hard', 'good', 'easy'][+e.key - 1]); return; }
     if ((e.key === 'z' && (e.metaKey || e.ctrlKey)) || e.key === 'Backspace') { e.preventDefault(); undo(); return; }
     if (e.key === 'p' && cur) speak(cur.card.kana);
