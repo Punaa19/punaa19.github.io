@@ -890,11 +890,17 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     const px = c => c.getImageData(0, 0, w, h).data;
     const T = px(t), TD = px(td), U = px(u), UD = px(ud);
     let nt = 0, nu = 0, rec = 0, prec = 0;
+    const zt = {}, zr = {};
     const bt = [w, h, -1, -1], bu = [w, h, -1, -1];
     const grow = (b, x, y) => { if (x < b[0]) b[0] = x; if (y < b[1]) b[1] = y; if (x > b[2]) b[2] = x; if (y > b[3]) b[3] = y; };
     for (let i = 3, k = 0; i < T.length; i += 4, k++) {
       const x = k % w, y = (k / w) | 0;
-      if (T[i] > 100) { nt++; grow(bt, x, y); if (UD[i] > 100) rec++; }
+      if (T[i] > 100) {
+        nt++; grow(bt, x, y);
+        const z = (Math.floor(y / N) * cols + Math.floor(x / N)) * 9 + Math.min(2, Math.floor((y % N) / (N / 3))) * 3 + Math.min(2, Math.floor((x % N) / (N / 3)));
+        zt[z] = (zt[z] || 0) + 1;
+        if (UD[i] > 100) { rec++; zr[z] = (zr[z] || 0) + 1; }
+      }
       if (U[i] > 100) { nu++; grow(bu, x, y); if (TD[i] > 100) prec++; }
     }
     if (!nt || !nu) return { empty: true, grade: 'again' };
@@ -902,10 +908,17 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     const dx = ((bu[0] + bu[2]) - (bt[0] + bt[2])) / 2 / N, dy = ((bu[1] + bu[3]) - (bt[1] + bt[3])) / 2 / N;
     const size = Math.sqrt(((bu[2] - bu[0] + 1) * (bu[3] - bu[1] + 1)) / ((bt[2] - bt[0] + 1) * (bt[3] - bt[1] + 1)));
     const off = Math.hypot(dx, dy);
-    let g = F >= 0.82 ? 3 : F >= 0.65 ? 2 : F >= 0.5 ? 1 : 0;
+    const nChars = Array.from(cur.target).length;
+    const missing = Object.keys(zt).map(Number).filter(z => zt[z] > (nt / nChars) * 0.06 && (zr[z] || 0) / zt[z] < 0.3);
+    let g = F >= 0.82 ? 3 : F >= 0.65 ? 2 : F >= 0.55 ? 1 : 0;
+    if (R < 0.6 || P < 0.5 || missing.length) g = 0;
     if (off > 0.15 || size < 0.7 || size > 1.35) g = 0;
     else if (off > 0.1 || size < 0.8 || size > 1.2) g = Math.min(g, 1);
     const issues = [];
+    if (missing.length) {
+      const zn = z => { const c = Math.floor(z / 9), k = z % 9; return `${nChars > 1 ? `chữ thứ ${c + 1}, ` : ''}phần ${['trên', 'giữa', 'dưới'][Math.floor(k / 3)]} ${['bên trái', 'chính giữa', 'bên phải'][k % 3]}`; };
+      issues.push(`Thiếu nét ở ${missing.slice(0, 3).map(zn).join('; ')}${missing.length > 3 ? '…' : ''}.`);
+    }
     if (off > 0.1) {
       const dir = [dy < -0.04 ? 'lên trên' : dy > 0.04 ? 'xuống dưới' : '', dx < -0.04 ? 'sang trái' : dx > 0.04 ? 'sang phải' : ''].filter(Boolean).join(' và ');
       issues.push(`Chữ lệch ${dir || 'khỏi tâm'} ${Math.round(off * 100)}% ô so với mẫu.`);
