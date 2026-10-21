@@ -95,7 +95,11 @@ button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2p
 .nav-actions .icon-btn:disabled { opacity: .4; cursor: not-allowed; }
 .nav-actions .icon-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
 .nav-actions .go { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 600; }
+a.brand { text-decoration: none; color: inherit; border-radius: 8px; }
+a.brand:hover b { color: var(--accent); }
 a.icon-btn { text-decoration: none; color: var(--ink); display: inline-flex; align-items: center; }
+.icon-btn.gear { display: inline-flex; align-items: center; padding: 7px 10px; }
+.icon-btn.gear svg { width: 18px; height: 18px; }
 .icon-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px; font-size: 14px; font-weight: 500; min-height: 36px; }
 
 /* Stage */
@@ -248,14 +252,13 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
 <body>
 <div class="app">
   <header class="top">
-    <div class="brand">
+    <a class="brand" href="index.html" title="Về trang chủ">
       <div class="mark" aria-hidden="true"><span>練</span></div>
       <div><b>Renshūchō</b><small>Vở luyện viết tiếng Nhật</small></div>
-    </div>
+    </a>
     <div class="stats" id="stats"></div>
-    <a class="icon-btn" href="index.html">Trang chủ</a>
     <a class="icon-btn" href="kana.html">Luyện kana</a>
-    <button class="icon-btn" data-act="settings" id="btnSettings">Bộ từ &amp; cài đặt</button>
+    <button class="icon-btn gear" data-act="settings" id="btnSettings" title="Cài đặt" aria-label="Cài đặt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </header>
 
   <nav class="controls" aria-label="Chọn bài luyện">
@@ -302,7 +305,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
     <div class="sheet-head">
-      <h2 id="sheetTitle">Bộ từ &amp; cài đặt</h2>
+      <h2 id="sheetTitle">Cài đặt</h2>
       <button class="icon-btn" data-act="close-settings">Đóng</button>
     </div>
 
@@ -588,7 +591,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
 
   function showEmpty() {
     cur = null; strokes = []; history = [];
-    $('#q').innerHTML = `<div class="empty"><b>Bộ “Từ của tôi” chưa có từ nào</b>Mở <em>Bộ từ &amp; cài đặt</em> và dán danh sách từ, mỗi dòng một từ.</div>
+    $('#q').innerHTML = `<div class="empty"><b>Bộ “Từ của tôi” chưa có từ nào</b>Bấm <em>Thêm từ</em> rồi dán danh sách từ, mỗi dòng một từ.</div>
       <div class="row"><button class="btn primary" data-act="settings">Thêm từ</button></div>`;
     $('#a').hidden = true; $('#meta').textContent = '';
     $('#promptPanel').classList.remove('revealed');
@@ -644,7 +647,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   /* ---------- rendering ---------- */
   function renderControls() {
     $('#deckSeg').innerHTML = Object.entries(DECKS).map(([k, d]) =>
-      `<button data-seg="deck" data-v="${k}" aria-pressed="${S.deck === k}">${esc(d.name)}</button>`).join('');
+      `<button data-seg="deck" data-v="${k}" aria-pressed="${S.deck === k}"${k === 'mine' ? ' title="Đang ở bộ này thì bấm lần nữa để thêm hoặc sửa từ"' : ''}>${esc(d.name)}${k === 'mine' && S.deck === 'mine' ? ' ✎' : ''}</button>`).join('');
     document.querySelectorAll('#modeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.mode));
     const eff = effPrompt();
     $('#promptSeg').innerHTML = PROMPTS[S.mode].map(([k, label, needVocab]) =>
@@ -1023,6 +1026,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       noteInteraction();
       const k = seg.dataset.seg, v = seg.dataset.v;
       if (k === 'deck' && S.deck !== v) { S.deck = v; save(); startSession(); }
+      else if (k === 'deck' && v === 'mine') openSheet();
       else if (k === 'mode' && S.mode !== v) { S.mode = v; save(); startSession(); }
       else if (k === 'prompt') { S.prompt[S.mode] = v; save(); renderControls(); if (cur) showCard(); }
       return;
