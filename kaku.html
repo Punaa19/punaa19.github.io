@@ -173,6 +173,7 @@ footer a { color: var(--blue); }
       <div style="display:flex;flex-direction:column;gap:10px">
         <div class="row">
           <button class="btn primary" id="btnPlay">▶ Xem cách viết</button>
+          <button class="btn" id="btnSpeak" title="Nghe cách đọc (phím P)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg> Nghe</button>
         </div>
         <dl class="info" id="info"></dl>
         <div class="row">
@@ -585,7 +586,46 @@ footer a { color: var(--blue); }
   function syncPen() { $('#btnPen').setAttribute('aria-pressed', S.penOnly); }
 
   let toastT = 0;
-  function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3000); }
+  function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, Math.max(3000, m.length * 60)); }
+
+  /* ---------- phát âm ---------- */
+  const UA = navigator.userAgent, hasTTS = 'speechSynthesis' in window;
+  const isIOS = /iPad|iPhone/i.test(UA) || (/Macintosh/i.test(UA) && 'ontouchend' in document), isWin = /Windows/i.test(UA);
+  const voiceHelp = () => isIOS ? 'Trên iPad: Cài đặt › Trợ năng › Nội dung được đọc › Giọng nói › Tiếng Nhật.'
+    : isWin ? 'Trên Windows: mở trang bằng Edge hoặc Chrome (có sẵn giọng Nhật), hoặc cài giọng Nhật trong Cài đặt › Thời gian & ngôn ngữ › Giọng nói.'
+    : 'Hãy mở trang bằng Chrome hoặc cài giọng tiếng Nhật cho máy.';
+  let jaVoice = null, utter = null, seqSp = 0, warned = false;
+  function pickVoice() {
+    if (!hasTTS) return;
+    const ja = (speechSynthesis.getVoices() || []).filter(v => /^ja/i.test(v.lang));
+    jaVoice = ja.find(v => /Nanami|Natural|Google|O-ren|Kyoko/i.test(v.name)) || ja[0] || null;
+  }
+  if (hasTTS) { pickVoice(); speechSynthesis.addEventListener ? speechSynthesis.addEventListener('voiceschanged', pickVoice) : (speechSynthesis.onvoiceschanged = pickVoice); }
+  function readingOf(c) {
+    const k = KMAP[c];
+    if (!k) return c;
+    const first = s => (s || '').split('・')[0].replace(/[()]/g, '').trim();
+    return [first(k.on), first(k.kun)].filter(Boolean).join('、') || c;
+  }
+  function speak(text, rate = 0.8) {
+    if (!hasTTS) { toast('Trình duyệt này không đọc được. ' + voiceHelp()); return; }
+    if (!jaVoice) pickVoice();
+    const my = ++seqSp;
+    const go = () => {
+      if (my !== seqSp) return;
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ja-JP'; if (jaVoice) u.voice = jaVoice; u.rate = rate;
+        let started = false; u.onstart = () => { started = true; };
+        u.onerror = ev => { if (!['interrupted', 'canceled'].includes(ev.error)) toast('Không phát được âm thanh (' + ev.error + '). ' + voiceHelp()); };
+        utter = u;
+        if (!jaVoice && !warned) { warned = true; toast('Máy chưa có giọng tiếng Nhật. ' + voiceHelp()); }
+        speechSynthesis.resume(); speechSynthesis.speak(u);
+        setTimeout(() => { if (!started && my === seqSp && !warned) { warned = true; toast('Không nghe thấy gì? ' + voiceHelp()); } }, 1800);
+      } catch (e) { toast('Không phát được âm thanh. ' + voiceHelp()); }
+    };
+    if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); setTimeout(go, 80); } else go();
+  }
 
   /* ---------- chế độ ---------- */
   function setMode() {
@@ -614,6 +654,7 @@ footer a { color: var(--blue); }
     select(c);
   });
   $('#btnPlay').addEventListener('click', play);
+  $('#btnSpeak').addEventListener('click', () => speak(readingOf(ch)));
   $('#btnPrev').addEventListener('click', () => move(-1));
   $('#btnNext').addEventListener('click', () => move(1));
   $('#btnUndo').addEventListener('click', undo);
@@ -625,6 +666,7 @@ footer a { color: var(--blue); }
     else if (e.key === 'ArrowRight') move(1);
     else if (e.key === 'ArrowLeft') move(-1);
     else if (e.key === ' ') { e.preventDefault(); play(); }
+    else if (e.key === 'p' || e.key === 'P') speak(readingOf(ch));
   });
   window.addEventListener('hashchange', setMode);
   new ResizeObserver(layout).observe(wrap);
