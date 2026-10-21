@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2f4a9e">
+<title>Kakikata 書き方</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Klee+One:wght@400;600&display=swap">
+<style>
+/* Layout: vở tập viết — ô hướng dẫn thứ tự nét bên trái, dải từng nét + 3 hàng ô viết bên phải. */
+:root {
+  --bg: #e9eeea;
+  --paper: #fbfcfa;
+  --surface: #f3f6f3;
+  --line: #cfd8d1;
+  --grid: #5f9070;
+  --ink: #1b2320;
+  --muted: #5b6862;
+  --ghost: #9aa8a0;
+  --accent: #b4432d;
+  --blue: #2c4a7e;
+  --f-jp: "Klee One", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-ui: "Be Vietnam Pro", -apple-system, system-ui, "Segoe UI", sans-serif;
+  --r: 14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121715; --paper: #1a201d; --surface: #212824; --line: #33403a; --grid: #5b8a6b;
+    --ink: #e6ece7; --muted: #97a49d; --ghost: #5d6b64; --accent: #e58069; --blue: #94b3ea; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121715; --paper: #1a201d; --surface: #212824; --line: #33403a; --grid: #5b8a6b;
+  --ink: #e6ece7; --muted: #97a49d; --ghost: #5d6b64; --accent: #e58069; --blue: #94b3ea; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body {
+  margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 15px; line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+[hidden] { display: none !important; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.app {
+  max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px;
+  padding-block: 12px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.top { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+.brand:hover b { color: var(--blue); }
+.mark {
+  width: 40px; height: 40px; display: grid; place-items: center; border: 1.5px solid var(--grid); border-radius: 4px;
+  font-family: var(--f-jp); font-weight: 600; font-size: 24px; color: var(--grid);
+  background: linear-gradient(var(--grid), var(--grid)) center / 1px 100% no-repeat, linear-gradient(var(--grid), var(--grid)) center / 100% 1px no-repeat;
+}
+.mark span { background: var(--bg); line-height: 1; padding: 1px; }
+.brand b { display: block; font-weight: 600; font-size: 17px; }
+.brand small { display: block; color: var(--muted); font-size: 12.5px; margin-top: -2px; }
+.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); flex-wrap: wrap; }
+.seg button, .seg a { border: 0; background: transparent; padding: 7px 14px; border-radius: 999px; font-size: 14px; font-weight: 500; min-height: 36px; color: var(--muted); text-decoration: none; display: inline-flex; align-items: center; }
+.seg [aria-pressed="true"], .seg [aria-current="page"] { background: var(--ink); color: var(--paper); }
+.spacer { flex: 1; }
+.btn { min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); font-weight: 500; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+.btn[aria-pressed="true"] { border-color: var(--blue); color: var(--blue); }
+.btn.primary { background: var(--blue); color: var(--paper); border-color: transparent; font-weight: 600; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* chọn chữ */
+.picker { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.picker-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.custom { display: flex; gap: 6px; align-items: center; }
+.custom input { width: 92px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-family: var(--f-jp); font-size: 17px; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; max-height: 128px; overflow: auto; }
+.chip {
+  position: relative; min-width: 40px; height: 40px; padding: 0 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface);
+  font-family: var(--f-jp); font-size: 20px; line-height: 1;
+}
+.chip[aria-current="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip.done::after { content: ""; position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--grid); }
+.chip-sep { width: 100%; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-top: 2px; }
+
+/* trang vở */
+.sheet { display: grid; grid-template-columns: minmax(220px, 280px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.guide { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.tag { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.tag .roma { font-size: 26px; font-weight: 600; letter-spacing: .02em; }
+.tag .count { font-size: 14px; color: var(--accent); font-weight: 600; }
+.bigbox { position: relative; width: 100%; aspect-ratio: 1; max-width: 100%; border: 1.5px solid var(--grid); border-radius: 4px; background: var(--paper); }
+.bigbox::before, .bigbox::after { content: ""; position: absolute; border-color: var(--grid); border-style: dashed; opacity: .45; }
+.bigbox::before { left: 50%; top: 4px; bottom: 4px; border-width: 0 0 0 1px; }
+.bigbox::after { top: 50%; left: 4px; right: 4px; border-width: 1px 0 0 0; }
+.bigbox svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.status { font-size: 13.5px; color: var(--muted); min-height: 1.4em; }
+.info { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0; font-size: 14.5px; }
+.info dt { color: var(--muted); font-size: 13px; padding-top: 1px; }
+.info dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.info .jp { font-family: var(--f-jp); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.work { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; }
+.step { width: 64px; height: 64px; border: 1px solid var(--line); border-radius: 4px; position: relative; background: var(--paper); }
+.step svg { width: 100%; height: 100%; display: block; }
+.step b { position: absolute; left: 3px; top: 1px; font-size: 10px; color: var(--muted); font-weight: 600; }
+.pad-wrap { position: relative; width: 100%; }
+#pad { display: block; touch-action: none; width: 100%; }
+.legend { font-size: 13px; color: var(--muted); }
+footer { font-size: 12.5px; color: var(--muted); }
+footer a { color: var(--blue); }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 30; max-width: calc(100% - 32px); text-align: center; }
+
+@media (max-width: 860px) {
+  .sheet { grid-template-columns: minmax(0, 1fr); }
+  .guide { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 12px; align-items: start; }
+  .guide > .tag { grid-column: 1 / -1; }
+}
+@media (max-width: 520px) {
+  .guide { grid-template-columns: minmax(0, 1fr); }
+  .step { width: 52px; height: 52px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="index.html" title="Về trang chủ">
+      <div class="mark" aria-hidden="true"><span>書</span></div>
+      <div><b>Kakikata</b><small id="subTitle">Tập viết theo thứ tự nét</small></div>
+    </a>
+    <nav class="seg" aria-label="Chọn trang tập viết">
+      <a href="#kana" data-mode="kana">Tập viết kana</a>
+      <a href="#kanji" data-mode="kanji">Tập viết kanji</a>
+    </nav>
+    <div class="spacer"></div>
+    <a class="btn" href="viet.html">Kiểm tra viết</a>
+  </header>
+
+  <section class="picker" aria-label="Chọn chữ">
+    <div class="picker-head">
+      <div class="seg" id="scriptSeg" role="group" aria-label="Bảng chữ">
+        <button data-script="h">Hiragana</button>
+        <button data-script="k">Katakana</button>
+      </div>
+      <span class="status" id="pickInfo"></span>
+      <div class="spacer"></div>
+      <form class="custom" id="customForm" autocomplete="off">
+        <label for="customIn" class="legend">Chữ khác</label>
+        <input id="customIn" maxlength="2" placeholder="例">
+        <button class="btn" type="submit">Tập</button>
+      </form>
+    </div>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <main class="sheet">
+    <section class="guide" aria-label="Hướng dẫn thứ tự nét">
+      <div class="tag"><span class="roma" id="roma"></span><span class="count" id="count"></span></div>
+      <div>
+        <div class="bigbox" id="bigbox"></div>
+        <div class="status" id="loadStatus" aria-live="polite"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="row">
+          <button class="btn primary" id="btnPlay">▶ Xem cách viết</button>
+        </div>
+        <dl class="info" id="info"></dl>
+        <div class="row">
+          <button class="btn" id="btnPrev">← Chữ trước</button>
+          <button class="btn" id="btnNext">Chữ tiếp →</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="work" aria-label="Luyện viết">
+      <div>
+        <div class="label">Từng nét</div>
+        <div class="steps" id="steps"></div>
+      </div>
+      <div>
+        <div class="row" style="justify-content:space-between">
+          <div class="label">Luyện viết · hàng 1 tô theo chữ mờ, hàng 2 và 3 tự viết</div>
+          <div class="row">
+            <button class="btn" id="btnUndo">Hoàn tác</button>
+            <button class="btn" id="btnClear">Xoá hết</button>
+            <button class="btn" id="btnPen" aria-pressed="false">Chỉ nhận bút</button>
+          </div>
+        </div>
+        <div class="pad-wrap" id="padWrap" style="margin-top:8px"><canvas id="pad" aria-label="Ô luyện viết"></canvas></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>Dữ liệu thứ tự nét: <a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener">KanjiVG</a> (Ulrich Apel), giấy phép CC BY-SA 3.0.</footer>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ---------- dữ liệu ---------- */
+  const ROMA = {
+    'あ':'a','い':'i','う':'u','え':'e','お':'o','か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko','さ':'sa','し':'shi','す':'su','せ':'se','そ':'so',
+    'た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to','な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no','は':'ha','ひ':'hi','ふ':'fu','へ':'he','ほ':'ho',
+    'ま':'ma','み':'mi','む':'mu','め':'me','も':'mo','や':'ya','ゆ':'yu','よ':'yo','ら':'ra','り':'ri','る':'ru','れ':'re','ろ':'ro','わ':'wa','を':'wo','ん':'n',
+    'が':'ga','ぎ':'gi','ぐ':'gu','げ':'ge','ご':'go','ざ':'za','じ':'ji','ず':'zu','ぜ':'ze','ぞ':'zo','だ':'da','ぢ':'ji','づ':'zu','で':'de','ど':'do',
+    'ば':'ba','び':'bi','ぶ':'bu','べ':'be','ぼ':'bo','ぱ':'pa','ぴ':'pi','ぷ':'pu','ぺ':'pe','ぽ':'po'
+  };
+  const BASIC = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん';
+  const DAK = 'がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ';
+  const toKata = s => s.replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+  const toHira = s => s.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+
+  // Kanji N5: chữ | Hán Việt | nghĩa | âm On | âm Kun
+  const KANJI_RAW = `一|NHẤT|một|イチ・イツ|ひと(つ)
+二|NHỊ|hai|ニ|ふた(つ)
+三|TAM|ba|サン|みっ(つ)
+四|TỨ|bốn|シ|よん・よ(つ)
+五|NGŨ|năm|ゴ|いつ(つ)
+六|LỤC|sáu|ロク|むっ(つ)
+七|THẤT|bảy|シチ|なな(つ)
+八|BÁT|tám|ハチ|やっ(つ)
+九|CỬU|chín|キュウ・ク|ここの(つ)
+十|THẬP|mười|ジュウ|とお
+百|BÁCH|trăm|ヒャク|
+千|THIÊN|nghìn|セン|ち
+万|VẠN|vạn, mười nghìn|マン・バン|
+円|VIÊN|yên (tiền), tròn|エン|まる(い)
+日|NHẬT|ngày, mặt trời|ニチ・ジツ|ひ・か
+月|NGUYỆT|tháng, mặt trăng|ゲツ・ガツ|つき
+火|HỎA|lửa|カ|ひ
+水|THỦY|nước|スイ|みず
+木|MỘC|cây|モク・ボク|き
+金|KIM|vàng, tiền|キン・コン|かね
+土|THỔ|đất|ド・ト|つち
+曜|DIỆU|ngày trong tuần|ヨウ|
+本|BẢN|sách, gốc|ホン|もと
+人|NHÂN|người|ジン・ニン|ひと
+今|KIM|bây giờ|コン|いま
+年|NIÊN|năm|ネン|とし
+時|THỜI|giờ, lúc|ジ|とき
+分|PHÂN|phút, chia|フン・ブン|わ(かる)
+半|BÁN|một nửa|ハン|なか(ば)
+午|NGỌ|buổi trưa|ゴ|
+前|TIỀN|trước|ゼン|まえ
+後|HẬU|sau|ゴ・コウ|あと・うし(ろ)
+上|THƯỢNG|trên|ジョウ|うえ・あ(がる)
+下|HẠ|dưới|カ・ゲ|した・さ(がる)
+左|TẢ|trái|サ|ひだり
+右|HỮU|phải|ウ・ユウ|みぎ
+中|TRUNG|giữa, trong|チュウ|なか
+外|NGOẠI|ngoài|ガイ|そと
+大|ĐẠI|to, lớn|ダイ・タイ|おお(きい)
+小|TIỂU|nhỏ|ショウ|ちい(さい)
+高|CAO|cao, đắt|コウ|たか(い)
+安|AN|rẻ, yên ổn|アン|やす(い)
+新|TÂN|mới|シン|あたら(しい)
+古|CỔ|cũ|コ|ふる(い)
+長|TRƯỜNG|dài|チョウ|なが(い)
+多|ĐA|nhiều|タ|おお(い)
+少|THIỂU|ít|ショウ|すく(ない)・すこ(し)
+白|BẠCH|trắng|ハク|しろ
+天|THIÊN|trời|テン|あま
+気|KHÍ|khí, tinh thần|キ・ケ|
+雨|VŨ|mưa|ウ|あめ
+電|ĐIỆN|điện|デン|
+車|XA|xe|シャ|くるま
+駅|DỊCH|nhà ga|エキ|
+道|ĐẠO|đường|ドウ|みち
+会|HỘI|gặp, hội|カイ|あ(う)
+社|XÃ|công ty, đền|シャ|やしろ
+学|HỌC|học|ガク|まな(ぶ)
+校|HIỆU|trường học|コウ|
+先|TIÊN|trước, đầu tiên|セン|さき
+生|SINH|sống, sinh ra|セイ・ショウ|い(きる)・う(まれる)
+名|DANH|tên|メイ・ミョウ|な
+何|HÀ|cái gì|カ|なに・なん
+見|KIẾN|nhìn, xem|ケン|み(る)
+行|HÀNH|đi|コウ・ギョウ|い(く)
+来|LAI|đến|ライ|く(る)
+出|XUẤT|ra|シュツ|で(る)
+入|NHẬP|vào|ニュウ|はい(る)・い(れる)
+食|THỰC|ăn|ショク|た(べる)
+飲|ẨM|uống|イン|の(む)
+買|MÃI|mua|バイ|か(う)
+読|ĐỘC|đọc|ドク|よ(む)
+書|THƯ|viết|ショ|か(く)
+話|THOẠI|nói chuyện|ワ|はな(す)
+聞|VĂN|nghe|ブン|き(く)
+言|NGÔN|nói|ゲン|い(う)
+休|HƯU|nghỉ|キュウ|やす(む)
+立|LẬP|đứng|リツ|た(つ)
+山|SƠN|núi|サン|やま
+川|XUYÊN|sông|セン|かわ
+田|ĐIỀN|ruộng|デン|た
+口|KHẨU|miệng|コウ|くち
+目|MỤC|mắt|モク|め
+耳|NHĨ|tai|ジ|みみ
+手|THỦ|tay|シュ|て
+足|TÚC|chân, đủ|ソク|あし
+父|PHỤ|bố|フ|ちち
+母|MẪU|mẹ|ボ|はは
+子|TỬ|con|シ|こ
+女|NỮ|nữ|ジョ|おんな
+男|NAM|nam|ダン|おとこ
+友|HỮU|bạn|ユウ|とも
+国|QUỐC|đất nước|コク|くに
+語|NGỮ|ngôn ngữ|ゴ|かた(る)
+東|ĐÔNG|phía đông|トウ|ひがし
+西|TÂY|phía tây|セイ・サイ|にし
+南|NAM|phía nam|ナン|みなみ
+北|BẮC|phía bắc|ホク|きた
+毎|MỖI|mỗi|マイ|
+週|CHU|tuần|シュウ|
+間|GIAN|khoảng, giữa|カン|あいだ・ま
+空|KHÔNG|bầu trời, trống|クウ|そら
+花|HOA|hoa|カ|はな
+店|ĐIẾM|cửa hàng|テン|みせ`;
+  const KANJI = KANJI_RAW.split('\n').map(l => { const [k, hv, vi, on, kun] = l.split('|'); return { k, hv, vi, on, kun }; });
+  const KMAP = Object.fromEntries(KANJI.map(x => [x.k, x]));
+
+  /* ---------- trạng thái ---------- */
+  const LS = 'kakikata.v1';
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(LS)) || {}; } catch (e) { st = {}; }
+  const S = { script: st.script || 'h', cur: st.cur || {}, done: st.done || {}, penOnly: !!st.penOnly, penAuto: !!st.penAuto };
+  const save = () => { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} };
+  let mode = 'kana', ch = 'あ', data = null, loadSeq = 0;
+
+  function listFor() {
+    if (mode === 'kanji') return [{ title: 'Kanji N5', chars: KANJI.map(x => x.k) }];
+    const conv = s => Array.from(S.script === 'k' ? toKata(s) : s);
+    return [{ title: 'Cơ bản', chars: conv(BASIC) }, { title: 'Biến âm', chars: conv(DAK) }];
+  }
+  const flat = () => listFor().flatMap(g => g.chars);
+
+  /* ---------- tải nét từ KanjiVG ---------- */
+  const cache = {};
+  const SRC = [
+    hex => `https://cdn.jsdelivr.net/gh/KanjiVG/kanjivg@r20250816/kanji/${hex}.svg`,
+    hex => `https://raw.githubusercontent.com/KanjiVG/kanjivg/r20250816/kanji/${hex}.svg`
+  ];
+  async function loadStrokes(c) {
+    if (cache[c]) return cache[c];
+    const hex = c.codePointAt(0).toString(16).padStart(5, '0');
+    let text = null;
+    for (const src of SRC) {
+      try { const r = await fetch(src(hex)); if (r.ok) { text = await r.text(); break; } } catch (e) {}
+    }
+    if (!text) throw new Error('nodata');
+    const strokes = [];
+    const re = /<path\b[^>]*?\bid="kvg:[^"]*?-s(\d+)"[^>]*?\bd="([^"]+)"/g;
+    let m; while ((m = re.exec(text))) strokes.push({ n: +m[1], d: m[2] });
+    strokes.sort((a, b) => a.n - b.n);
+    const nums = [];
+    const re2 = /<text[^>]*transform="matrix\(1 0 0 1 ([\d.\-]+) ([\d.\-]+)\)"[^>]*>(\d+)<\/text>/g;
+    while ((m = re2.exec(text))) nums[+m[3] - 1] = [+m[1], +m[2]];
+    if (!strokes.length) throw new Error('nodata');
+    return (cache[c] = { strokes, nums });
+  }
+
+  /* ---------- vẽ hướng dẫn ---------- */
+  const NS = 'http://www.w3.org/2000/svg';
+  function svgEl(tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) { const v = String(attrs[k]); if (v.startsWith('var(')) e.style.setProperty(k, v); else e.setAttribute(k, v); }
+    return e;
+  }
+  function arrowFor(path) {
+    const L = path.getTotalLength(); if (!L) return null;
+    const a = path.getPointAtLength(0), b = path.getPointAtLength(Math.min(7, L));
+    const ang = Math.atan2(b.y - a.y, b.x - a.x);
+    const tip = [a.x + Math.cos(ang) * 9, a.y + Math.sin(ang) * 9];
+    const w = 3.2, back = 5.5;
+    const p1 = [tip[0] - Math.cos(ang) * back + Math.cos(ang + Math.PI / 2) * w, tip[1] - Math.sin(ang) * back + Math.sin(ang + Math.PI / 2) * w];
+    const p2 = [tip[0] - Math.cos(ang) * back - Math.cos(ang + Math.PI / 2) * w, tip[1] - Math.sin(ang) * back - Math.sin(ang + Math.PI / 2) * w];
+    return { start: a, tri: `${tip[0]},${tip[1]} ${p1[0]},${p1[1]} ${p2[0]},${p2[1]}` };
+  }
+  let bigPaths = [];
+  function renderGuide() {
+    const box = $('#bigbox'); box.innerHTML = '';
+    if (!data) return;
+    const svg = svgEl('svg', { viewBox: '0 0 109 109', 'aria-hidden': 'true' });
+    const g = svgEl('g', { fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+    svg.appendChild(g); box.appendChild(svg);
+    bigPaths = data.strokes.map(s => { const p = svgEl('path', { d: s.d, stroke: 'var(--ink)', 'stroke-width': 4 }); g.appendChild(p); return p; });
+    const marks = svgEl('g', {}); svg.appendChild(marks);
+    bigPaths.forEach((p, i) => {
+      const ar = arrowFor(p); if (!ar) return;
+      marks.appendChild(svgEl('circle', { cx: ar.start.x, cy: ar.start.y, r: 2.6, fill: 'var(--accent)' }));
+      marks.appendChild(svgEl('polygon', { points: ar.tri, fill: 'var(--accent)' }));
+      const pos = data.nums[i] || [ar.start.x - 7, ar.start.y - 3];
+      const t = svgEl('text', { x: pos[0], y: pos[1], 'font-size': 8, 'font-family': 'Be Vietnam Pro, sans-serif', 'font-weight': 600, fill: 'var(--accent)' });
+      t.textContent = i + 1; marks.appendChild(t);
+    });
+  }
+  function renderSteps() {
+    const wrap = $('#steps'); wrap.innerHTML = '';
+    if (!data) return;
+    data.strokes.forEach((s, k) => {
+      const cell = document.createElement('div'); cell.className = 'step';
+      const svg = svgEl('svg', { viewBox: '0 0 109 109', 'aria-hidden': 'true' });
+      const g = svgEl('g', { fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+      data.strokes.slice(0, k + 1).forEach((t, i) => g.appendChild(svgEl('path', { d: t.d, stroke: i === k ? 'var(--ink)' : 'var(--ghost)', 'stroke-width': i === k ? 6 : 5 })));
+      svg.appendChild(g);
+      cell.appendChild(svg);
+      const b = document.createElement('b'); b.textContent = k + 1; cell.appendChild(b);
+      cell.title = `Nét ${k + 1}`;
+      wrap.appendChild(cell);
+      const last = g.lastChild, ar = arrowFor(last);
+      if (ar) { svg.appendChild(svgEl('circle', { cx: ar.start.x, cy: ar.start.y, r: 4, fill: 'var(--accent)' })); }
+    });
+  }
+  let anims = [];
+  function play() {
+    if (!bigPaths.length) return;
+    anims.forEach(a => a.cancel()); anims = [];
+    let delay = 150;
+    bigPaths.forEach(p => {
+      const L = p.getTotalLength();
+      p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+      const dur = Math.max(350, L * 9);
+      anims.push(p.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: dur, delay, fill: 'forwards', easing: 'ease-in-out' }));
+      delay += dur + 180;
+    });
+    const last = anims[anims.length - 1];
+    last.onfinish = () => bigPaths.forEach(p => { p.style.strokeDasharray = ''; p.style.strokeDashoffset = ''; });
+  }
+
+  function renderInfo() {
+    const dl = $('#info');
+    if (mode === 'kanji' || KMAP[ch]) {
+      const k = KMAP[ch];
+      $('#roma').innerHTML = `<span style="font-family:var(--f-jp);font-size:30px">${esc(ch)}</span>${k ? ' ' + esc(k.hv) : ''}`;
+      dl.innerHTML = k ? `<dt>Nghĩa</dt><dd>${esc(k.vi)}</dd><dt>Hán Việt</dt><dd>${esc(k.hv)}</dd>${k.on ? `<dt>Âm On</dt><dd class="jp">${esc(k.on)}</dd>` : ''}${k.kun ? `<dt>Âm Kun</dt><dd class="jp">${esc(k.kun)}</dd>` : ''}` : '';
+    } else {
+      const r = ROMA[toHira(ch)];
+      $('#roma').textContent = r || ch;
+      dl.innerHTML = `<dt>Chữ</dt><dd class="jp">${esc(ch)}</dd><dt>Bảng</dt><dd>${/[ァ-ヺ]/.test(ch) ? 'Katakana' : /[ぁ-ゖ]/.test(ch) ? 'Hiragana' : 'Kanji'}</dd>`;
+    }
+    $('#count').textContent = data ? `${data.strokes.length} nét` : '';
+  }
+
+  function renderChips() {
+    const cur = ch;
+    $('#chips').innerHTML = listFor().map(g => `<div class="chip-sep">${esc(g.title)}</div>` + g.chars.map(c =>
+      `<button class="chip${S.done[c] ? ' done' : ''}" data-ch="${esc(c)}" aria-current="${c === cur}" title="${esc(mode === 'kanji' ? (KMAP[c] ? KMAP[c].hv + ' – ' + KMAP[c].vi : c) : (ROMA[toHira(c)] || c))}">${esc(c)}</button>`).join('')).join('');
+    const sel = $('#chips [aria-current="true"]'); if (sel) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    $('#scriptSeg').hidden = mode === 'kanji';
+    document.querySelectorAll('#scriptSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.script === S.script));
+    const done = flat().filter(c => S.done[c]).length;
+    $('#pickInfo').textContent = `Đã tập ${done}/${flat().length} chữ`;
+  }
+
+  async function select(c) {
+    ch = c; S.cur[mode === 'kanji' ? 'kanji' : S.script] = c; save();
+    strokes = []; hist = [];
+    data = null; renderChips(); renderInfo(); renderGuide(); renderSteps(); drawPad();
+    $('#loadStatus').textContent = 'Đang tải thứ tự nét…';
+    const my = ++loadSeq;
+    try {
+      const d = await loadStrokes(c);
+      if (my !== loadSeq) return;
+      data = d; $('#loadStatus').textContent = '';
+      renderInfo(); renderGuide(); renderSteps(); drawPad();
+    } catch (e) {
+      if (my !== loadSeq) return;
+      $('#loadStatus').textContent = 'Không tải được thứ tự nét cho chữ này. Kiểm tra mạng rồi bấm lại vào chữ.';
+      drawPad();
+    }
+  }
+  function move(dir) {
+    const list = flat(); let i = list.indexOf(ch);
+    if (strokes.length) { S.done[ch] = 1; save(); }
+    i = i < 0 ? 0 : (i + dir + list.length) % list.length;
+    select(list[i]);
+  }
+
+  /* ---------- ô luyện viết ---------- */
+  const cv = $('#pad'), ctx = cv.getContext('2d'), wrap = $('#padWrap');
+  const ROWS = 3;
+  let W = 0, H = 0, dpr = 1, cell = 100, cols = 6, ox = 0, oy = 0;
+  let strokes = [], hist = [], drawing = null;
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function layout() {
+    W = wrap.clientWidth; if (!W) return;
+    const target = W < 520 ? 76 : W < 760 ? 96 : 112;
+    cols = Math.max(3, Math.floor(W / target));
+    cell = Math.floor(W / cols);
+    H = cell * ROWS; ox = Math.floor((W - cell * cols) / 2); oy = 0;
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    cv.style.height = H + 'px';
+    drawPad();
+  }
+  function drawPad() {
+    if (!W) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    const g = css('--grid');
+    ctx.strokeStyle = g;
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < cols; c++) {
+      const x = ox + c * cell, y = oy + r * cell;
+      ctx.globalAlpha = 0.9; ctx.setLineDash([]); ctx.lineWidth = 1;
+      ctx.strokeRect(x + 0.5, y + 0.5, cell - 1, cell - 1);
+      ctx.globalAlpha = 0.4; ctx.setLineDash([3, 5]);
+      ctx.beginPath(); ctx.moveTo(x + cell / 2, y + 3); ctx.lineTo(x + cell / 2, y + cell - 3); ctx.moveTo(x + 3, y + cell / 2); ctx.lineTo(x + cell - 3, y + cell / 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.setLineDash([]);
+    if (data) {
+      ctx.strokeStyle = css('--ghost'); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      const paths = data.strokes.map(s => new Path2D(s.d));
+      for (let c = 0; c < cols; c++) {
+        ctx.save(); ctx.translate(ox + c * cell, oy); ctx.scale(cell / 109, cell / 109);
+        ctx.lineWidth = 5; ctx.globalAlpha = 0.55;
+        paths.forEach(p => ctx.stroke(p));
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+    }
+    const ink = css('--ink');
+    strokes.forEach(s => drawStroke(s, ink));
+  }
+  const P = p => [ox + p.x * cell, oy + p.y * cell];
+  function setInk(ink) { ctx.strokeStyle = ctx.fillStyle = ink; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.globalAlpha = 1; }
+  function dot(p) { const [x, y] = P(p); ctx.beginPath(); ctx.arc(x, y, p.w * cell / 2, 0, Math.PI * 2); ctx.fill(); }
+  function seg(pts, i) {
+    const a = pts[i - 1], b = pts[i], z = pts[i - 2];
+    const [ax, ay] = P(a), [bx, by] = P(b);
+    let sx = ax, sy = ay; if (z) { const [zx, zy] = P(z); sx = (zx + ax) / 2; sy = (zy + ay) / 2; }
+    ctx.lineWidth = ((a.w + b.w) / 2) * cell;
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(ax, ay, (ax + bx) / 2, (ay + by) / 2); ctx.stroke();
+  }
+  function tail(pts) {
+    if (pts.length < 2) return;
+    const a = pts[pts.length - 2], b = pts[pts.length - 1];
+    const [ax, ay] = P(a), [bx, by] = P(b);
+    ctx.lineWidth = b.w * cell; ctx.beginPath(); ctx.moveTo((ax + bx) / 2, (ay + by) / 2); ctx.lineTo(bx, by); ctx.stroke();
+  }
+  function drawStroke(s, ink) { setInk(ink); const p = s.pts; if (!p.length) return; dot(p[0]); for (let i = 1; i < p.length; i++) seg(p, i); tail(p); }
+  function addPoint(ev) {
+    const r = cv.getBoundingClientRect();
+    const x = (ev.clientX - r.left - ox) / cell, y = (ev.clientY - r.top - oy) / cell;
+    const base = 0.05;
+    const w = ev.pointerType === 'pen' ? base * (0.5 + (ev.pressure || 0.5)) : base;
+    const pts = drawing.pts, last = pts[pts.length - 1];
+    if (last && Math.hypot(x - last.x, y - last.y) < 0.004) return;
+    pts.push({ x, y, w: last ? last.w * 0.6 + w * 0.4 : w });
+    if (pts.length === 1) dot(pts[0]); else seg(pts, pts.length - 1);
+  }
+  cv.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'pen' && !S.penAuto) { S.penAuto = true; S.penOnly = true; save(); syncPen(); toast('Đã nhận Apple Pencil: tay chạm vào giấy sẽ không vẽ nữa.'); }
+    if (S.penOnly && e.pointerType === 'touch') return;
+    if (e.button > 0 || drawing) return;
+    e.preventDefault();
+    try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+    drawing = { id: e.pointerId, pts: [] };
+    strokes.push(drawing); hist.push({ t: 's' });
+    setInk(css('--ink')); addPoint(e);
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!drawing || e.pointerId !== drawing.id) return;
+    e.preventDefault();
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    (evs.length ? evs : [e]).forEach(addPoint);
+  });
+  const end = e => { if (!drawing || e.pointerId !== drawing.id) return; tail(drawing.pts); drawing = null; };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+
+  function undo() { const h = hist.pop(); if (!h) return; if (h.t === 's') strokes.pop(); else strokes = h.prev; drawPad(); }
+  function clearAll() { if (!strokes.length) return; hist.push({ t: 'c', prev: strokes }); strokes = []; drawPad(); }
+  function syncPen() { $('#btnPen').setAttribute('aria-pressed', S.penOnly); }
+
+  let toastT = 0;
+  function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3000); }
+
+  /* ---------- chế độ ---------- */
+  function setMode() {
+    mode = location.hash === '#kanji' ? 'kanji' : 'kana';
+    document.querySelectorAll('nav [data-mode]').forEach(a => { if (a.dataset.mode === mode) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    $('#subTitle').textContent = mode === 'kanji' ? 'Tập viết kanji N5' : 'Tập viết hiragana, katakana';
+    document.title = mode === 'kanji' ? 'Tập viết kanji · Kakikata' : 'Tập viết kana · Kakikata';
+    const list = flat();
+    const saved = S.cur[mode === 'kanji' ? 'kanji' : S.script];
+    select(list.includes(saved) ? saved : list[0]);
+  }
+
+  /* ---------- sự kiện ---------- */
+  $('#chips').addEventListener('click', e => { const b = e.target.closest('[data-ch]'); if (!b) return; if (strokes.length) { S.done[ch] = 1; save(); } select(b.dataset.ch); });
+  $('#scriptSeg').addEventListener('click', e => {
+    const b = e.target.closest('[data-script]'); if (!b || b.dataset.script === S.script) return;
+    S.script = b.dataset.script; save();
+    const conv = S.script === 'k' ? toKata(ch) : toHira(ch);
+    select(flat().includes(conv) ? conv : flat()[0]);
+  });
+  $('#customForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const c = Array.from($('#customIn').value.trim())[0];
+    if (!c) return;
+    if (!/[ぁ-ゖァ-ヺ㐀-鿿]/.test(c)) { toast('Chỉ tập được chữ kana hoặc kanji.'); return; }
+    select(c);
+  });
+  $('#btnPlay').addEventListener('click', play);
+  $('#btnPrev').addEventListener('click', () => move(-1));
+  $('#btnNext').addEventListener('click', () => move(1));
+  $('#btnUndo').addEventListener('click', undo);
+  $('#btnClear').addEventListener('click', clearAll);
+  $('#btnPen').addEventListener('click', () => { S.penOnly = !S.penOnly; S.penAuto = true; save(); syncPen(); toast(S.penOnly ? 'Chỉ Apple Pencil mới vẽ được.' : 'Ngón tay cũng vẽ được.'); });
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('input')) return;
+    if ((e.key === 'z' && (e.ctrlKey || e.metaKey)) || e.key === 'Backspace') { e.preventDefault(); undo(); }
+    else if (e.key === 'ArrowRight') move(1);
+    else if (e.key === 'ArrowLeft') move(-1);
+    else if (e.key === ' ') { e.preventDefault(); play(); }
+  });
+  window.addEventListener('hashchange', setMode);
+  new ResizeObserver(layout).observe(wrap);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { drawPad(); });
+
+  syncPen();
+  layout();
+  setMode();
+})();
+</script>
+</body>
+</html>
