@@ -1,0 +1,159 @@
+<!-- test -->
+line2<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2f4a9e">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Nihongo Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Noto+Sans+JP:wght@400;500&display=swap">
+<style>
+/* Layout: khung trắng kiểu djtguide — thanh menu chữ Nhật trên cùng, breadcrumb, một cột nội dung ở giữa. */
+:root {
+  --bg: #f6f6f4;
+  --panel: #ffffff;
+  --line: #dcdcd8;
+  --ink: #1c1c1e;
+  --muted: #6b6b70;
+  --accent: #2f5fa8;
+  --f-ui: "Be Vietnam Pro", -apple-system, system-ui, "Segoe UI", sans-serif;
+  --f-jp: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #232325; --panel: #2a2a2d; --line: #3c3c40; --ink: #e6e6e8; --muted: #9a9aa0; --accent: #8fb4ec; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #232325; --panel: #2a2a2d; --line: #3c3c40; --ink: #e6e6e8; --muted: #9a9aa0; --accent: #8fb4ec; color-scheme: dark; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 15.5px; line-height: 1.65; }
+a { color: var(--accent); }
+
+.topbar { border-bottom: 1px solid var(--line); }
+.topbar-in, .main {
+  max-width: 900px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.topbar-in { display: flex; align-items: flex-end; gap: 6px 14px; flex-wrap: wrap; padding-block: 12px; }
+.logo { font-family: var(--f-jp); font-weight: 500; font-size: 15px; color: var(--ink); text-decoration: none; border: 1.5px solid var(--ink); padding: 2px 6px; margin-right: 8px; align-self: center; }
+nav { display: flex; gap: 4px 18px; flex-wrap: wrap; }
+nav a { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: var(--muted); line-height: 1.15; padding: 2px 0; }
+nav a small { font-size: 10px; letter-spacing: .04em; }
+nav a span { font-family: var(--f-jp); font-size: 20px; }
+nav a[aria-current="page"] { color: var(--ink); }
+nav a[aria-current="page"] span { border-bottom: 2px solid var(--accent); }
+
+.main { padding-block: 22px 60px; }
+.crumb { font-size: 13px; color: var(--muted); }
+.crumb a { text-decoration: none; }
+h1 { font-size: 26px; font-weight: 600; margin: 6px 0 18px; text-wrap: balance; }
+h1 .jp { font-family: var(--f-jp); font-weight: 400; color: var(--muted); font-size: 18px; margin-left: 8px; }
+h2 { font-size: 18px; font-weight: 600; margin: 28px 0 8px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
+.page { display: none; max-width: 70ch; }
+.page.active { display: block; }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; margin: 10px 0; }
+.todo { color: var(--muted); font-style: italic; }
+ul.list { padding-left: 1.2em; margin: 6px 0; }
+ul.list li { margin: 4px 0; }
+footer { margin-top: 48px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="logo" href="#home">日本語</a>
+    <nav id="nav" aria-label="Mục chính">
+      <a href="#hoc"><small>học</small><span>学習</span></a>
+      <a href="#nguphap"><small>ngữ pháp</small><span>文法</span></a>
+      <a href="#thuvien"><small>thư viện</small><span>図書館</span></a>
+      <a href="#nhatky"><small>cập nhật</small><span>日誌</span></a>
+      <a href="#bosung"><small>bổ sung</small><span>補論</span></a>
+      <a href="#diendan"><small>diễn đàn</small><span>掲示板</span></a>
+      <a href="#home"><small>trang chủ</small><span>ホーム</span></a>
+    </nav>
+  </div>
+</header>
+
+<main class="main">
+  <div class="crumb" id="crumb"></div>
+
+  <section class="page" id="p-home" data-title="Trang chủ" data-jp="ホーム">
+    <h1>Trang chủ <span class="jp">ホーム</span></h1>
+    <p class="todo">Giới thiệu ngắn về trang: trang này dành cho ai, học theo cách nào.</p>
+    <h2>Bắt đầu từ đâu</h2>
+    <p class="todo">Viết vài dòng hướng dẫn người mới, rồi trỏ sang mục Học.</p>
+    <h2>Mới cập nhật</h2>
+    <p class="todo">Tóm tắt các thay đổi gần đây (lấy từ mục Nhật ký).</p>
+  </section>
+
+  <section class="page" id="p-hoc" data-title="Học" data-jp="学習">
+    <h1>Học <span class="jp">学習</span></h1>
+    <h2>Lộ trình</h2>
+    <p class="todo">Các bước: kana → từ vựng cơ bản → ngữ pháp N5 → đọc dễ…</p>
+    <h2>Công cụ luyện tập</h2>
+    <div class="box">
+      <ul class="list">
+        <li><a href="kana.html">Gojūon Drill</a>: nhìn hoặc nghe kana rồi gõ romaji</li>
+        <li><a href="viet.html">Renshūchō</a>: luyện viết tay kana và từ vựng</li>
+      </ul>
+    </div>
+    <h2>Mẹo học</h2>
+    <p class="todo">Ghi chú cách học hiệu quả.</p>
+  </section>
+
+  <section class="page" id="p-nguphap" data-title="Ngữ pháp" data-jp="文法">
+    <h1>Ngữ pháp <span class="jp">文法</span></h1>
+    <h2>N5</h2>
+    <p class="todo">Danh sách bài ngữ pháp N5.</p>
+    <h2>N4</h2>
+    <p class="todo">Danh sách bài ngữ pháp N4.</p>
+  </section>
+
+  <section class="page" id="p-thuvien" data-title="Thư viện" data-jp="図書館">
+    <h1>Thư viện <span class="jp">図書館</span></h1>
+    <h2>Sách &amp; giáo trình</h2>
+    <p class="todo">Thêm sách tại đây.</p>
+    <h2>App &amp; website</h2>
+    <p class="todo">Thêm app, trang web tại đây.</p>
+    <h2>Đọc &amp; nghe</h2>
+    <p class="todo">Thêm tài liệu đọc, nghe tại đây.</p>
+  </section>
+
+  <section class="page" id="p-nhatky" data-title="Nhật ký" data-jp="日誌">
+    <h1>Nhật ký cập nhật <span class="jp">日誌</span></h1>
+    <div class="box"><b>20/10/2026</b> · Tạo khung trang.</div>
+  </section>
+
+  <section class="page" id="p-bosung" data-title="Bổ sung" data-jp="補論">
+    <h1>Bổ sung <span class="jp">補論</span></h1>
+    <p class="todo">Bài viết lẻ, ghi chú, chủ đề khác.</p>
+  </section>
+
+  <section class="page" id="p-diendan" data-title="Diễn đàn" data-jp="掲示板">
+    <h1>Diễn đàn <span class="jp">掲示板</span></h1>
+    <p class="todo">Chưa làm. Nơi hỏi đáp, sẽ thêm sau.</p>
+  </section>
+
+  <footer>Nihongo Guide · khung trang, nội dung đang soạn.</footer>
+</main>
+
+<script>
+(() => {
+  const PAGES = ['home', 'hoc', 'nguphap', 'thuvien', 'nhatky', 'bosung', 'diendan'];
+  function show() {
+    const h = location.hash.replace('#', '');
+    const id = PAGES.includes(h) ? h : 'home';
+    document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'p-' + id));
+    document.querySelectorAll('#nav a').forEach(a => { if (a.getAttribute('href') === '#' + id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    const p = document.getElementById('p-' + id);
+    document.getElementById('crumb').innerHTML = id === 'home' ? '' :
+      `<a href="#home">ホーム</a> → ${p.dataset.jp} · ${p.dataset.title}`;
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', show);
+  show();
+})();
+</script>
+</body>
+</html>
