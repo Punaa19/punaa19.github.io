@@ -299,7 +299,7 @@ textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Con
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const SHEET = '1hzSKBFmbF4f1n-vG_iNa-Nbul-fiSMqZTSqSrFbQUL8', TAB = 'Grammar 文型';
-  const URL_CSV = `https://docs.google.com/spreadsheets/d/${SHEET}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(TAB)}`;
+  const URL_CSV = `https://docs.google.com/spreadsheets/d/${SHEET}/gviz/tq?tqx=out:csv&headers=2&sheet=${encodeURIComponent(TAB)}`; /* headers=2: tiêu đề ở dòng 2, giữ được tên cột số như Bài */
   const KC = 'nihongo.grammar.cache.v1', KL = 'nihongo.grammar.learned.v1', KS = 'nihongo.grammar.ui.v1';
   const get = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
   const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -325,7 +325,7 @@ textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Con
     for (let i = 0; i < Math.min(rows.length, 20); i++) { const r = rows[i].map(c => clean(c).toLowerCase()); if (r.some(c => c.includes('pattern')) && r.some(c => c.includes('meaning'))) { h = i; break; } }
     if (h < 0) return [];
     const hd = rows[h].map(c => clean(c).toLowerCase());
-    const col = (...n) => hd.findIndex(c => n.some(x => c.includes(x)));
+    const col = (...n) => { for (const x of n) { const i = hd.findIndex(c => c.includes(x)); if (i >= 0) return i; } return -1; };
     const ci = { pat: col('pattern', '文型'), pos: col('part of speech'), mean: col('meaning'), conn: col('connection', '接続'), note: col('note'), ex: col('example', '例文'), tr: col('translate', '翻訳'), jlpt: col('jlpt'), bai: col('bài') };
     const at = (r, k) => ci[k] < 0 ? '' : clean(r[ci[k]]);
     const out = [];
