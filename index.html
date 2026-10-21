@@ -106,6 +106,8 @@ textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Con
 .g-no { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .g-pat { font-family: var(--f-jp); font-size: 24px; line-height: 1.3; }
 .g-pill { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 14%, var(--panel)); color: var(--accent); }
+.g-do { margin-left: auto; font-size: 13px; text-decoration: none; border: 1px solid var(--line); border-radius: 6px; padding: 3px 10px; }
+.g-do + .g-learn { margin-left: 0; }
 .g-learn { margin-left: auto; border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 3px 10px; font-size: 13px; color: var(--muted); cursor: pointer; }
 .g-learn[aria-pressed="true"] { color: #2e7a4c; border-color: #2e7a4c; }
 .g-mean { font-size: 16.5px; font-weight: 500; }
@@ -165,7 +167,7 @@ textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Con
 
   <section class="page" id="p-nguphap" data-title="Ngữ pháp" data-jp="文法">
     <h1>Ngữ pháp <span class="jp">文法</span></h1>
-    <div class="g-meta"><span id="gInfo">Đang tải tab Grammar 文型 từ Google Sheet…</span><button class="btn" type="button" id="gReload">Tải lại từ Sheet</button></div>
+    <div class="g-meta"><span id="gInfo">Đang tải tab Grammar 文型 từ Google Sheet…</span><button class="btn" type="button" id="gReload">Tải lại từ Sheet</button><a class="btn primary" href="baitap.html" style="text-decoration:none">Làm bài tập →</a></div>
     <div class="g-tools">
       <input type="search" id="gSearch" placeholder="Tìm mẫu câu hoặc nghĩa, ví dụ “muốn”" aria-label="Tìm ngữ pháp">
       <select id="gFilter" aria-label="Lọc"><option value="all">Tất cả</option><option value="todo">Chưa thuộc</option><option value="done">Đã thuộc</option></select>
@@ -408,7 +410,7 @@ textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Con
       const hidden = what => `<button class="g-cover" type="button" data-open="${id}">Bấm để xem ${what}</button>`;
       return `<article class="g-card">
         <div class="g-head"><span class="g-no">${String(x.no).padStart(2, '0')}</span><span class="g-pat">${esc(x.pat)}</span>${x.pos ? `<span class="g-pill">${esc(x.pos)}</span>` : ''}${x.jlpt ? `<span class="g-pill">${esc(x.jlpt)}</span>` : ''}${x.bai ? `<span class="g-pill">Bài ${esc(x.bai)}</span>` : ''}
-          <button class="g-learn" type="button" data-learn="${id}" aria-pressed="${!!learned[x.pat]}">${learned[x.pat] ? '✓ Đã thuộc' : 'Đánh dấu đã thuộc'}</button></div>
+          <a class="g-do" href="baitap.html?mau=${encodeURIComponent(x.pat)}">Bài tập</a><button class="g-learn" type="button" data-learn="${id}" aria-pressed="${!!learned[x.pat]}">${learned[x.pat] ? '✓ Đã thuộc' : 'Đánh dấu đã thuộc'}</button></div>
         ${x.mean ? (open ? `<div class="g-mean">${esc(x.mean)}</div>` : hidden('nghĩa')) : ''}
         ${x.conn ? `<div class="g-row"><span class="g-lbl">Cách nối</span><div class="g-conn">${connHtml(x.conn)}</div></div>` : ''}
         ${x.ex ? `<div class="g-row"><span class="g-lbl">Ví dụ</span><div><div class="g-ex">${exHtml(x.ex, x.conn)}<button class="g-say" type="button" data-say="${esc(x.ex)}" aria-label="Nghe câu ví dụ">🔊</button></div>${x.tr ? (open ? `<div class="g-tr">${esc(x.tr)}</div>` : hidden('bản dịch')) : ''}</div></div>` : ''}
