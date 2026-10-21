@@ -178,7 +178,7 @@ a.icon-btn { text-decoration: none; color: var(--ink); display: inline-flex; ali
 .done-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); padding: 28px; max-width: 460px; width: 100%; display: flex; flex-direction: column; gap: 16px; }
 .done-card h2 { margin: 0; font-size: 24px; text-wrap: balance; }
 .done-card h2 .jp { font-family: var(--f-jp); color: var(--grid); margin-right: 8px; }
-.tally { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-variant-numeric: tabular-nums; }
+.tally { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-variant-numeric: tabular-nums; }
 .tally div { text-align: center; padding: 10px 4px; border-radius: 10px; color: var(--c); background: color-mix(in srgb, var(--c) 11%, var(--paper)); }
 .tally b { display: block; font-size: 22px; }
 .tally span { font-size: 12px; }
@@ -572,13 +572,12 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   function tallyCounts() {
     const f = Object.values(session.first || {});
     const n = gs => f.filter(x => gs.includes(x)).length;
-    return { done: f.length, good: n(['good', 'easy']), hard: n(['hard']), again: n(['again']) };
+    return { done: f.length, good: n(['good', 'easy', 'hard']), again: n(['again']) };
   }
   function renderTally() {
     const t = tallyCounts();
     $('#tallyBar').innerHTML = `<div class="tbox t-done"><b>${t.done}/${session.total}</b><span>Đã làm</span></div>
       <div class="tbox g-good"><b>${t.good}</b><span>Đúng</span></div>
-      <div class="tbox g-hard"><b>${t.hard}</b><span>Khó</span></div>
       <div class="tbox g-again"><b>${t.again}</b><span>Sai</span></div>`;
   }
   function nextCard() {
@@ -619,7 +618,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
 
   function showDone() {
     cur = null;
-    const tc = tallyCounts(), st = { again: tc.again, hard: tc.hard, good: tc.good, easy: 0 }, cards = deck().cards(), p = prog(), now = Date.now();
+    const tc = tallyCounts(), st = { again: tc.again, good: tc.good }, cards = deck().cards(), p = prog(), now = Date.now();
     const freshLeft = cards.filter(c => !p[c.id]).length;
     const future = cards.map(c => p[c.id] && p[c.id].d).filter(d => d && d > now);
     const next = future.length ? Math.min(...future) : 0;
@@ -629,7 +628,6 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       <h2><span class="jp">${did ? '済' : '休'}</span>${head}</h2>
       ${did ? `<div class="tally">
         <div class="g-again"><b>${st.again}</b><span>Sai</span></div>
-        <div class="g-hard"><b>${st.hard}</b><span>Khó</span></div>
         <div class="g-good"><b>${st.good}</b><span>Đúng</span></div>
         <div class="t-done"><b>${did}</b><span>Đã làm</span></div></div>` : ''}
       <p class="meta" style="margin:0">${next ? `Thẻ tiếp theo của bộ ${esc(deck().name)} đến hạn sau ${fmtSpan(next - now)}.` : `Bộ ${esc(deck().name)} còn ${freshLeft} thẻ mới chưa học.`}</p>
@@ -859,7 +857,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   }
   /* ---------- auto check ---------- */
   const GRADES = ['again', 'hard', 'good', 'easy'];
-  const GRADE_VI = { again: 'Sai', hard: 'Khó', good: 'Đúng', easy: 'Dễ' };
+  const GRADE_VI = { again: 'Sai', hard: 'Đúng', good: 'Đúng', easy: 'Đúng' };
   function checkInk() {
     if (!cur) return null;
     const drawn = strokes.filter(s => s.pts.length);
@@ -922,7 +920,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     const R = rec / nt, P = prec / nu, F = 2 * R * P / (R + P || 1);
     const nChars = Array.from(cur.target).length;
     const missing = Object.keys(zt).map(Number).filter(z => zt[z] > (nt / nChars) * 0.06 && (zr[z] || 0) / zt[z] < 0.25);
-    let g = F >= 0.8 ? 3 : F >= 0.6 ? 2 : F >= 0.45 ? 1 : 0;
+    let g = F >= 0.8 ? 3 : F >= 0.45 ? 2 : 0;
     if (R < 0.5 || P < 0.4 || missing.length) g = 0;
     const issues = [];
     if (missing.length) {
