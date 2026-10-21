@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2f4a9e">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Gojūon Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&display=swap">
+<style>
+/* Layout: drill card (sticky, left) beside the 五十音 chart used to pick rows (right); stacks on narrow screens. */
+:root {
+  --bg: #eef0f3;
+  --panel: #ffffff;
+  --sunk: #f5f6f8;
+  --line: #d7dbe2;
+  --ink: #171a20;
+  --muted: #5f6673;
+  --accent: #2f4a9e;
+  --accent-ink: #ffffff;
+  --ok: #2b7a4b;
+  --bad: #c2412d;
+  --f-ui: "Be Vietnam Pro", -apple-system, system-ui, "Segoe UI", sans-serif;
+  --f-jp: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111318; --panel: #191c23; --sunk: #20242c; --line: #2f3440; --ink: #e8ebf0; --muted: #9aa1ad;
+    --accent: #8ea6f0; --accent-ink: #0e1426; --ok: #6cc690; --bad: #ef8570; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111318; --panel: #191c23; --sunk: #20242c; --line: #2f3440; --ink: #e8ebf0; --muted: #9aa1ad;
+  --accent: #8ea6f0; --accent-ink: #0e1426; --ok: #6cc690; --bad: #ef8570; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 15px; line-height: 1.5; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.wrap {
+  max-width: 1240px; margin: 0 auto; padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 18px;
+}
+header h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+header h1 .jp { font-family: var(--f-jp); font-weight: 500; color: var(--accent); }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 65ch; }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (min-width: 980px) { .layout { grid-template-columns: minmax(360px, 5fr) minmax(0, 7fr); } .drill { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); } }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); }
+.drill { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--sunk); border: 1px solid var(--line); }
+.seg button { border: 0; background: transparent; padding: 6px 14px; border-radius: 999px; font-size: 14px; font-weight: 500; color: var(--muted); min-height: 34px; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.spacer { flex: 1; }
+.toggle { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 12px; font-size: 13.5px; min-height: 34px; color: var(--muted); }
+.toggle[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--panel)); }
+
+.stage {
+  position: relative; border-radius: 12px; background: var(--sunk); border: 1px solid var(--line);
+  min-height: 250px; display: grid; place-items: center; overflow: hidden; transition: background-color .2s, border-color .2s;
+}
+.stage.ok { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--sunk)); }
+.stage.bad { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, var(--sunk)); }
+.kana {
+  font-size: clamp(110px, 16vw, 180px); line-height: 1; padding: 22px 10px 30px; border: 0; background: transparent;
+  font-family: var(--f-jp); color: var(--ink); white-space: nowrap; transition: opacity .12s;
+}
+.kana.loading { opacity: 0; }
+.listen-btn { width: 108px; height: 108px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+.listen-btn svg { width: 46px; height: 46px; }
+.stage-foot { position: absolute; left: 12px; right: 12px; bottom: 8px; display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); pointer-events: none; gap: 8px; }
+.peek { position: absolute; top: 10px; right: 12px; font-size: 12px; color: var(--muted); }
+
+.answer-row { display: flex; gap: 8px; }
+#ans {
+  flex: 1; min-width: 0; font: inherit; font-size: 26px; text-align: center; letter-spacing: .06em;
+  padding: 10px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--panel); color: var(--ink);
+}
+#ans:focus { border-color: var(--accent); outline: none; }
+.btn { min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); font-weight: 500; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+.btn.small { min-height: 34px; font-size: 13px; padding: 0 10px; }
+.feedback { min-height: 26px; font-size: 16px; text-align: center; }
+.feedback .bad { color: var(--bad); font-weight: 600; }
+.feedback .ok { color: var(--ok); font-weight: 600; }
+.feedback .jp { font-family: var(--f-jp); }
+
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; font-variant-numeric: tabular-nums; }
+.stat { background: var(--sunk); border-radius: 10px; padding: 8px 10px; }
+.stat b { display: block; font-size: 20px; font-weight: 600; }
+.stat span { font-size: 12px; color: var(--muted); }
+.misses { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+.miss { font-family: var(--f-jp); font-size: 15px; color: var(--ink); background: color-mix(in srgb, var(--bad) 13%, var(--panel)); border-radius: 6px; padding: 1px 8px; }
+.miss small { font-family: var(--f-ui); color: var(--muted); margin-left: 4px; font-size: 11px; }
+
+/* Chart */
+.chart { padding: 18px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.chart-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.chart-head h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.group { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.group-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.group-head h3 { margin: 0; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.links { display: flex; gap: 4px; }
+.link { border: 0; background: transparent; color: var(--accent); font-size: 13px; padding: 2px 6px; border-radius: 6px; }
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { border-collapse: separate; border-spacing: 3px; }
+th button {
+  width: 100%; min-width: 42px; border: 1px solid var(--line); background: var(--sunk); border-radius: 7px;
+  font-size: 12px; font-weight: 600; padding: 4px 2px; color: var(--muted);
+}
+th button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+td { padding: 0; }
+.cell {
+  width: 100%; min-width: 42px; height: 50px; border: 1px solid transparent; border-radius: 7px; padding: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1;
+  background: color-mix(in srgb, var(--bad) var(--heat, 0%), var(--sunk)); opacity: .55;
+}
+.cell.on { opacity: 1; border-color: var(--line); }
+.cell .k { font-family: var(--f-jp); font-size: 19px; }
+.cell .r { font-size: 10.5px; color: var(--muted); }
+.cell.blank { visibility: hidden; }
+.legend { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.legend i { width: 60px; height: 10px; border-radius: 4px; background: linear-gradient(90deg, var(--sunk), color-mix(in srgb, var(--bad) 60%, var(--sunk))); border: 1px solid var(--line); }
+
+.fonts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.font {
+  display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); background: var(--sunk); border-radius: 10px;
+  padding: 6px 10px; text-align: left; opacity: .55; min-width: 0;
+}
+.font[aria-pressed="true"] { opacity: 1; background: var(--panel); border-color: var(--accent); }
+.font .s { font-size: 26px; line-height: 1; }
+.font .n { font-size: 12.5px; line-height: 1.25; min-width: 0; overflow-wrap: anywhere; }
+.font .n em { display: block; font-style: normal; color: var(--bad); font-size: 11px; }
+.note { font-size: 13px; color: var(--muted); margin: 0; max-width: 70ch; }
+.note b { color: var(--ink); font-weight: 600; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--panel); padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 30; max-width: calc(100% - 32px); text-align: center; }
+.shake { animation: shake .3s; }
+@keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+@media (prefers-reduced-motion: reduce) { .shake { animation: none; } .stage, .kana { transition: none; } }
+@media (max-width: 520px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .stage { min-height: 210px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <nav style="font-size:13px;margin-bottom:6px;display:flex;gap:14px;flex-wrap:wrap"><a href="index.html" style="color:var(--accent)">← Trang chủ</a><a href="viet.html" style="color:var(--accent)">Luyện viết tay</a></nav>
+    <h1>Gojūon Drill <span class="jp">五十音</span></h1>
+    <p>Nhìn chữ rồi gõ romaji, gõ đúng là tự sang chữ tiếp. Luyện một hàng tới khi hết sai rồi mới thêm hàng mới. Chữ bạn hay sai sẽ quay lại nhiều hơn.</p>
+  </header>
+
+  <div class="layout">
+    <section class="panel drill" aria-label="Luyện tập">
+      <div class="bar">
+        <div class="seg" role="group" aria-label="Chế độ">
+          <button data-mode="see">Nhìn → gõ</button>
+          <button data-mode="hear">Nghe → gõ</button>
+        </div>
+        <div class="spacer"></div>
+        <button class="toggle" id="tAuto" data-act="auto">Tự đọc</button>
+        <button class="toggle" id="tFont" data-act="fontname">Tên phông</button>
+      </div>
+
+      <div class="stage" id="stage">
+        <span class="peek" id="peekHint">Chạm chữ để xem đáp án</span>
+        <div id="show"></div>
+        <div class="stage-foot"><span id="fontLabel"></span><span id="poolLabel"></span></div>
+      </div>
+
+      <div class="answer-row">
+        <input id="ans" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" placeholder="romaji" aria-label="Gõ romaji">
+        <button class="btn" data-act="speak" aria-label="Nghe">Nghe</button>
+        <button class="btn" data-act="skip">Bỏ qua</button>
+      </div>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+
+      <div class="stats" id="stats"></div>
+      <div class="misses" id="misses"></div>
+    </section>
+
+    <section class="panel chart" aria-label="Chọn chữ để luyện">
+      <div class="chart-head">
+        <h2>Chọn hàng chữ</h2>
+        <div class="seg" role="group" aria-label="Bảng chữ">
+          <button data-script="h">Hiragana</button>
+          <button data-script="k">Katakana</button>
+        </div>
+        <span class="count" id="count"></span>
+      </div>
+      <div id="tables"></div>
+      <div class="legend"><span>Màu nền theo tỉ lệ sai:</span><span>ít</span><i></i><span>nhiều</span><span class="spacer"></span><button class="link" data-act="reset" id="resetBtn">Xoá thống kê</button></div>
+
+      <div class="group">
+        <div class="group-head"><h3>Phông chữ</h3><div class="links"><button class="link" data-act="fonts-all">Chọn hết</button><button class="link" data-act="fonts-none">Bỏ hết</button></div></div>
+        <div class="fonts" id="fonts"></div>
+        <p class="note">Mỗi lượt chữ hiện bằng một phông ngẫu nhiên trong số đã chọn, để bạn quen cả chữ in lẫn chữ viết tay. Các phông đánh dấu <b>khó</b> là kiểu viết tay, người mới nên để sau.</p>
+      </div>
+      <p class="note">Gõ được cả kiểu Kunrei: <b>si, ti, tu, hu, zi, sya, tya, zya</b>… Chữ <b>ん</b> gõ n hoặc nn, <b>を</b> gõ wo hoặc o. Sai thì nhấn Enter để xem đáp án, gõ lại đúng hoặc nhấn Enter lần nữa để sang chữ mới.</p>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ---------- romaji ---------- */
+  const ROMA = {
+    'あ':'a','い':'i','う':'u','え':'e','お':'o','か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko','が':'ga','ぎ':'gi','ぐ':'gu','げ':'ge','ご':'go',
+    'さ':'sa','し':'shi','す':'su','せ':'se','そ':'so','ざ':'za','じ':'ji','ず':'zu','ぜ':'ze','ぞ':'zo','た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to',
+    'だ':'da','ぢ':'ji','づ':'zu','で':'de','ど':'do','な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no','は':'ha','ひ':'hi','ふ':'fu','へ':'he','ほ':'ho',
+    'ば':'ba','び':'bi','ぶ':'bu','べ':'be','ぼ':'bo','ぱ':'pa','ぴ':'pi','ぷ':'pu','ぺ':'pe','ぽ':'po','ま':'ma','み':'mi','む':'mu','め':'me','も':'mo',
+    'や':'ya','ゆ':'yu','よ':'yo','ら':'ra','り':'ri','る':'ru','れ':'re','ろ':'ro','わ':'wa','を':'wo','ん':'n'
+  };
+  const toHira = s => s.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+  const toKata = s => s.replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+  const SMALL = { 'ゃ': 'a', 'ゅ': 'u', 'ょ': 'o' };
+  function romaji(k) {
+    const s = Array.from(toHira(k)); let r = ROMA[s[0]] || '';
+    if (s[1] && SMALL[s[1]]) { const b = r.slice(0, -1); r = (/(sh|ch|j)$/.test(b) ? b : b + 'y') + SMALL[s[1]]; }
+    return r;
+  }
+  const ALT = {
+    shi: ['si'], chi: ['ti'], tsu: ['tu'], fu: ['hu'], ji: ['zi'], wo: ['o'], n: ['nn', "n'"],
+    sha: ['sya'], shu: ['syu'], sho: ['syo'], cha: ['tya', 'cya'], chu: ['tyu', 'cyu'], cho: ['tyo', 'cyo'],
+    ja: ['zya', 'jya'], ju: ['zyu', 'jyu'], jo: ['zyo', 'jyo']
+  };
+  function accepted(item) {
+    const list = [item.roma, ...(ALT[item.roma] || [])];
+    const h = toHira(item.k);
+    if (h === 'ぢ') list.push('di'); if (h === 'づ') list.push('du');
+    if (h === 'を') list.push('o');
+    return list;
+  }
+
+  /* ---------- chart data ---------- */
+  const GROUPS = [
+    { id: 'basic', name: 'Cơ bản', rows: ['a', 'i', 'u', 'e', 'o'], cols: [
+      ['a', 'あいうえお'], ['ka', 'かきくけこ'], ['sa', 'さしすせそ'], ['ta', 'たちつてと'], ['na', 'なにぬねの'], ['ha', 'はひふへほ'],
+      ['ma', 'まみむめも'], ['ya', 'や・ゆ・よ'], ['ra', 'らりるれろ'], ['wa', 'わ・・・を'], ['n', 'ん・・・・']] },
+    { id: 'dak', name: 'Biến âm (dakuten)', rows: ['a', 'i', 'u', 'e', 'o'], cols: [
+      ['ga', 'がぎぐげご'], ['za', 'ざじずぜぞ'], ['da', 'だぢづでど'], ['ba', 'ばびぶべぼ'], ['pa', 'ぱぴぷぺぽ']] },
+    { id: 'combo', name: 'Âm ghép (yōon)', rows: ['ya', 'yu', 'yo'], cols: 'きしちにひみりぎじびぴ'.split('').map(b => [romaji(b + 'ゃ'), [b + 'ゃ', b + 'ゅ', b + 'ょ']]) }
+  ];
+  function colChars(col) { return typeof col[1] === 'string' ? Array.from(col[1]) : col[1]; }
+  const ITEMS = {}; // key -> [{k, roma, script}]
+  ['h', 'k'].forEach(sc => GROUPS.forEach(g => g.cols.forEach(col => {
+    ITEMS[`${sc}:${g.id}:${col[0]}`] = colChars(col).filter(c => c !== '・').map(c => {
+      const k = sc === 'k' ? toKata(c) : c; return { k, roma: romaji(c), script: sc };
+    });
+  })));
+
+  const FONTS = [
+    ['Noto Sans JP', 'Gothic chuẩn', 0], ['Noto Serif JP', 'Mincho', 0], ['Klee One', 'Chữ sách giáo khoa', 0], ['Zen Maru Gothic', 'Bo tròn', 0],
+    ['Shippori Mincho', 'Mincho cổ', 0], ['Kaisei Decol', 'Trang trí', 0], ['M PLUS Rounded 1c', 'Tròn mảnh', 0], ['RocknRoll One', 'Đậm vui', 0],
+    ['Mochiy Pop One', 'Pop', 0], ['DotGothic16', 'Điểm ảnh', 0], ['Dela Gothic One', 'Rất đậm', 0], ['Yusei Magic', 'Bút dạ', 0],
+    ['Yomogi', 'Viết tay', 1], ['Zen Kurenaido', 'Bút lông mềm', 1], ['Hachi Maru Pop', 'Viết tay tròn', 1], ['Yuji Syuku', 'Thư pháp', 1]
+  ];
+  (function loadFonts() {
+    let chars = '';
+    for (let c = 0x3041; c <= 0x3093; c++) chars += String.fromCharCode(c) + String.fromCharCode(c + 0x60);
+    const href = 'https://fonts.googleapis.com/css2?' + FONTS.map(f => 'family=' + f[0].replace(/ /g, '+')).join('&') +
+      '&text=' + encodeURIComponent(chars) + '&display=swap';
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; document.head.appendChild(l);
+  })();
+
+  /* ---------- storage ---------- */
+  const LS = 'gojuon.v1';
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(LS)) || {}; } catch (e) { st = {}; }
+  const S = {
+    sel: st.sel || ['h:basic:a', 'h:basic:ka'],
+    fonts: st.fonts || FONTS.filter(f => !f[2]).map(f => f[0]),
+    stats: st.stats || {}, mode: st.mode || 'see', script: st.script || 'h',
+    auto: st.auto ?? true, fontName: st.fontName ?? true
+  };
+  function save() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) {} }
+
+  /* ---------- drill ---------- */
+  let cur = null, last = null, pending = [], fontReq = 0;
+  const sess = { ok: 0, total: 0, streak: 0, best: 0 };
+  const pool = () => { const seen = new Set(), out = []; S.sel.forEach(key => (ITEMS[key] || []).forEach(it => { if (!seen.has(it.k)) { seen.add(it.k); out.push(it); } })); return out; };
+  const statOf = k => S.stats[k] || { s: 0, m: 0 };
+
+  function pick(items) {
+    pending.forEach(p => p.n--);
+    const dueIdx = pending.findIndex(p => p.n <= 0 && items.some(i => i.k === p.k));
+    if (dueIdx >= 0) { const k = pending.splice(dueIdx, 1)[0].k; if (k !== last || items.length === 1) return items.find(i => i.k === k); }
+    pending = pending.filter(p => items.some(i => i.k === p.k));
+    const cand = items.length > 1 ? items.filter(i => i.k !== last) : items;
+    const w = cand.map(i => { const s = statOf(i.k); return 1 + 4 * (s.m + 0.3) / (s.s + 1) + (s.s === 0 ? 0.8 : 0); });
+    let r = Math.random() * w.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < cand.length; i++) { r -= w[i]; if (r <= 0) return cand[i]; }
+    return cand[cand.length - 1];
+  }
+
+  function next() {
+    const items = pool();
+    $('#ans').value = '';
+    $('#stage').classList.remove('ok', 'bad');
+    $('#feedback').innerHTML = '';
+    $('#poolLabel').textContent = items.length ? `${items.length} chữ đang luyện` : '';
+    if (!items.length) {
+      cur = null;
+      $('#show').innerHTML = '<p class="note" style="padding:24px;text-align:center">Chọn ít nhất một hàng chữ trong bảng để bắt đầu.</p>';
+      $('#fontLabel').textContent = ''; $('#peekHint').hidden = true; return;
+    }
+    const item = pick(items);
+    const fonts = S.fonts.length ? S.fonts : ['Noto Sans JP'];
+    cur = { ...item, font: fonts[Math.floor(Math.random() * fonts.length)], missed: false, done: false };
+    last = item.k;
+    render();
+    if (S.mode === 'hear') speak(cur.k);
+  }
+
+  const SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+  function render() {
+    const hidden = S.mode === 'hear' && !cur.missed && !cur.done;
+    $('#peekHint').hidden = cur.missed || cur.done;
+    $('#peekHint').textContent = hidden ? 'Chạm loa để nghe lại' : 'Chạm chữ để xem đáp án';
+    if (hidden) {
+      $('#show').innerHTML = `<button class="listen-btn" data-act="speak" aria-label="Nghe lại">${SPEAKER}</button>`;
+      $('#fontLabel').textContent = '';
+      return;
+    }
+    const fam = `"${cur.font}", "Noto Sans JP", "Hiragino Sans", sans-serif`;
+    $('#show').innerHTML = `<button class="kana loading" data-act="peek" aria-label="Chữ cần đọc" style='font-family:${esc(fam)}'>${esc(cur.k)}</button>`;
+    $('#fontLabel').textContent = S.fontName ? cur.font : '';
+    const req = ++fontReq, el = $('#show .kana');
+    const done = () => { if (req === fontReq && el) el.classList.remove('loading'); };
+    if (document.fonts && document.fonts.load) {
+      Promise.race([document.fonts.load(`80px "${cur.font}"`, cur.k), new Promise(r => setTimeout(r, 700))]).then(done, done);
+    } else done();
+  }
+
+  function record(k, miss) {
+    const s = statOf(k); s.s++; if (miss) s.m++; S.stats[k] = s; save();
+  }
+
+  function correct() {
+    if (!cur || cur.done) return;
+    const wasMissed = cur.missed;
+    cur.done = true;
+    if (!wasMissed) { record(cur.k, false); sess.ok++; sess.total++; sess.streak++; sess.best = Math.max(sess.best, sess.streak); }
+    $('#stage').classList.add('ok');
+    if (S.mode === 'hear') render();
+    $('#feedback').innerHTML = `<span class="ok">${esc(cur.roma)}</span>`;
+    if (S.auto && S.mode === 'see') speak(cur.k);
+    renderStats(); paintHeat();
+    setTimeout(next, wasMissed ? 150 : (S.mode === 'hear' ? 650 : 320));
+  }
+
+  function wrong(why) {
+    if (!cur || cur.done) return;
+    if (!cur.missed) {
+      cur.missed = true;
+      record(cur.k, true); sess.total++; sess.streak = 0;
+      pending.push({ k: cur.k, n: 3 });
+      if (S.auto) speak(cur.k);
+    }
+    $('#stage').classList.add('bad');
+    if (S.mode === 'hear') render();
+    $('#peekHint').hidden = true;
+    const typed = $('#ans').value.trim();
+    $('#feedback').innerHTML = `${why === 'typed' && typed ? `Bạn gõ “${esc(typed)}” · ` : ''}<span class="jp">${esc(cur.k)}</span> = <span class="bad">${esc(cur.roma)}</span> <span class="note">· gõ lại hoặc nhấn Enter</span>`;
+    const a = $('#ans'); a.classList.remove('shake'); void a.offsetWidth; a.classList.add('shake'); a.select();
+    renderStats(); paintHeat();
+  }
+
+  const ans = $('#ans');
+  ans.addEventListener('input', () => {
+    if (!cur || cur.done) return;
+    const v = ans.value.trim().toLowerCase();
+    if (accepted(cur).includes(v)) correct();
+  });
+  ans.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (!cur) return;
+    if (cur.done) return;
+    const v = ans.value.trim().toLowerCase();
+    if (cur.missed) { next(); return; }
+    if (!v) return;
+    if (accepted(cur).includes(v)) correct(); else wrong('typed');
+  });
+
+  /* ---------- stats ---------- */
+  function renderStats() {
+    const pct = sess.total ? Math.round(sess.ok / sess.total * 100) + '%' : '–';
+    $('#stats').innerHTML = `
+      <div class="stat"><b>${sess.ok}/${sess.total}</b><span>Đúng lượt này</span></div>
+      <div class="stat"><b>${pct}</b><span>Tỉ lệ đúng</span></div>
+      <div class="stat"><b>${sess.streak}</b><span>Chuỗi đúng</span></div>
+      <div class="stat"><b>${sess.best}</b><span>Kỷ lục chuỗi</span></div>`;
+    const items = pool();
+    const worst = items.map(i => ({ ...i, ...statOf(i.k) })).filter(i => i.m > 0 && i.s >= 2)
+      .sort((a, b) => b.m / b.s - a.m / a.s || b.m - a.m).slice(0, 8);
+    $('#misses').innerHTML = worst.length
+      ? `<span>Hay sai:</span>${worst.map(i => `<span class="miss">${esc(i.k)}<small>${esc(i.roma)} · ${Math.round(i.m / i.s * 100)}%</small></span>`).join('')}`
+      : '<span>Chưa có chữ nào sai nhiều. Cứ tiếp tục.</span>';
+  }
+
+  /* ---------- chart ---------- */
+  function renderChart() {
+    const sc = S.script, sel = new Set(S.sel);
+    $('#tables').innerHTML = GROUPS.map(g => {
+      const keys = g.cols.map(c => `${sc}:${g.id}:${c[0]}`);
+      const head = g.cols.map((c, ci) => `<th scope="col"><button data-col="${keys[ci]}" aria-pressed="${sel.has(keys[ci])}">${esc(c[0])}</button></th>`).join('');
+      const body = g.rows.map((rw, ri) => '<tr>' + g.cols.map((c, ci) => {
+        const ch = colChars(c)[ri];
+        if (!ch || ch === '・') return '<td><div class="cell blank"></div></td>';
+        const k = sc === 'k' ? toKata(ch) : ch;
+        return `<td><button class="cell${sel.has(keys[ci]) ? ' on' : ''}" data-col="${keys[ci]}" data-k="${esc(k)}" aria-label="${esc(k)} ${esc(romaji(ch))}"><span class="k">${esc(k)}</span><span class="r">${esc(romaji(ch))}</span></button></td>`;
+      }).join('') + '</tr>').join('');
+      return `<div class="group">
+        <div class="group-head"><h3>${g.name}</h3><div class="links">
+          <button class="link" data-all="${g.id}">Chọn hết</button><button class="link" data-none="${g.id}">Bỏ hết</button></div></div>
+        <div class="scroll"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+    }).join('');
+    document.querySelectorAll('[data-script]').forEach(b => b.setAttribute('aria-pressed', b.dataset.script === sc));
+    $('#count').textContent = `Đang luyện ${pool().length} chữ`;
+    paintHeat();
+  }
+  function paintHeat() {
+    document.querySelectorAll('.cell[data-k]').forEach(el => {
+      const s = statOf(el.dataset.k);
+      el.style.setProperty('--heat', s.s >= 2 ? Math.round(Math.min(1, s.m / s.s) * 60) + '%' : '0%');
+    });
+  }
+  function renderFonts() {
+    $('#fonts').innerHTML = FONTS.map(([f, d, hard]) => `<button class="font" data-font="${esc(f)}" aria-pressed="${S.fonts.includes(f)}">
+      <span class="s" style='font-family:"${esc(f)}", serif'>あ</span><span class="n">${esc(f)}${hard ? '<em>khó</em>' : ''}<br><span class="count">${d}</span></span></button>`).join('');
+  }
+  function selChanged() { save(); renderChart(); renderStats(); if (!cur || !pool().some(i => i.k === cur.k)) next(); }
+
+  /* ---------- speech ---------- */
+  const UA = navigator.userAgent, hasTTS = 'speechSynthesis' in window;
+  const isIOS = /iPad|iPhone/i.test(UA) || (/Macintosh/i.test(UA) && 'ontouchend' in document), isWin = /Windows/i.test(UA);
+  const voiceHelp = () => isIOS ? 'Trên iPad: Cài đặt › Trợ năng › Nội dung được đọc › Giọng nói › Tiếng Nhật.'
+    : isWin ? 'Trên Windows: mở trang bằng Edge hoặc Chrome (có sẵn giọng Nhật), hoặc cài giọng Nhật trong Cài đặt › Thời gian & ngôn ngữ › Giọng nói.'
+    : 'Hãy mở trang bằng Chrome hoặc cài giọng tiếng Nhật cho máy.';
+  let jaVoice = null, utter = null, seq = 0, warned = false;
+  function pickVoice() {
+    if (!hasTTS) return;
+    const ja = (speechSynthesis.getVoices() || []).filter(v => /^ja/i.test(v.lang));
+    jaVoice = ja.find(v => /Nanami|Natural|Google|O-ren|Kyoko/i.test(v.name)) || ja[0] || null;
+  }
+  if (hasTTS) { pickVoice(); speechSynthesis.addEventListener ? speechSynthesis.addEventListener('voiceschanged', pickVoice) : (speechSynthesis.onvoiceschanged = pickVoice); }
+  function speak(text, rate = 0.85) {
+    if (!hasTTS) { if (!warned) { warned = true; toast('Trình duyệt này không đọc được. ' + voiceHelp()); } return; }
+    if (!jaVoice) pickVoice();
+    const my = ++seq;
+    const go = () => {
+      if (my !== seq) return;
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ja-JP'; if (jaVoice) u.voice = jaVoice; u.rate = rate;
+        let started = false; u.onstart = () => { started = true; };
+        u.onerror = ev => { if (!['interrupted', 'canceled'].includes(ev.error)) toast('Không phát được âm thanh (' + ev.error + '). ' + voiceHelp()); };
+        utter = u;
+        if (!jaVoice && !warned) { warned = true; toast('Máy chưa có giọng tiếng Nhật. ' + voiceHelp()); }
+        speechSynthesis.resume(); speechSynthesis.speak(u);
+        setTimeout(() => { if (!started && my === seq && !warned) { warned = true; toast('Không nghe thấy gì? ' + voiceHelp()); } }, 1800);
+      } catch (e) { toast('Không phát được âm thanh. ' + voiceHelp()); }
+    };
+    if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); setTimeout(go, 80); } else go();
+  }
+  let toastT = 0;
+  function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, Math.max(2800, m.length * 60)); }
+
+  /* ---------- events ---------- */
+  document.addEventListener('click', e => {
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.col) {
+      const k = t.dataset.col, i = S.sel.indexOf(k);
+      if (i >= 0) S.sel.splice(i, 1); else S.sel.push(k);
+      return selChanged();
+    }
+    if (t.dataset.all || t.dataset.none) {
+      const g = GROUPS.find(x => x.id === (t.dataset.all || t.dataset.none));
+      const keys = g.cols.map(c => `${S.script}:${g.id}:${c[0]}`);
+      S.sel = S.sel.filter(k => !keys.includes(k)); if (t.dataset.all) S.sel.push(...keys);
+      return selChanged();
+    }
+    if (t.dataset.script) { S.script = t.dataset.script; save(); return renderChart(); }
+    if (t.dataset.mode) { S.mode = t.dataset.mode; save(); syncToggles(); next(); ans.focus(); return; }
+    if (t.dataset.font) {
+      const f = t.dataset.font, i = S.fonts.indexOf(f);
+      if (i >= 0) S.fonts.splice(i, 1); else S.fonts.push(f);
+      save(); return renderFonts();
+    }
+    switch (t.dataset.act) {
+      case 'peek': case 'skip': if (cur && !cur.done) { if (cur.missed) next(); else wrong('peek'); } ans.focus(); break;
+      case 'speak': if (cur) speak(cur.k); ans.focus(); break;
+      case 'auto': S.auto = !S.auto; save(); syncToggles(); break;
+      case 'fontname': S.fontName = !S.fontName; save(); syncToggles(); if (cur) $('#fontLabel').textContent = S.fontName && !(S.mode === 'hear' && !cur.missed && !cur.done) ? cur.font : ''; break;
+      case 'fonts-all': S.fonts = FONTS.map(f => f[0]); save(); renderFonts(); break;
+      case 'fonts-none': S.fonts = []; save(); renderFonts(); break;
+      case 'reset':
+        if (t.dataset.confirm) { S.stats = {}; save(); paintHeat(); renderStats(); t.textContent = 'Xoá thống kê'; delete t.dataset.confirm; toast('Đã xoá thống kê sai/đúng.'); }
+        else { t.dataset.confirm = '1'; t.textContent = 'Nhấn lần nữa để xoá'; setTimeout(() => { if (t.dataset.confirm) { delete t.dataset.confirm; t.textContent = 'Xoá thống kê'; } }, 3000); }
+        break;
+    }
+  });
+  function syncToggles() {
+    document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === S.mode));
+    $('#tAuto').setAttribute('aria-pressed', S.auto);
+    $('#tFont').setAttribute('aria-pressed', S.fontName);
+  }
+
+  syncToggles(); renderChart(); renderFonts(); renderStats(); next();
+  if (window.matchMedia('(pointer: fine)').matches) ans.focus({ preventScroll: true });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (cur) render(); });
+})();
+</script>
+</body>
+</html>
