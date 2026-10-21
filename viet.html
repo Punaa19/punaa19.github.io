@@ -211,9 +211,18 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
 @media (prefers-reduced-motion: reduce) { .reveal-in { animation: none; } }
 
 /* Portrait iPad & narrow screens: stack */
+@media (max-height: 760px) and (min-width: 900px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100%; }
+  .stage { flex: none; }
+  .paper-wrap { flex: none; height: max(340px, 62vh); }
+}
 @media (max-width: 899px) {
-  .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-  .prompt { max-height: 36vh; padding: 16px; }
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100%; }
+  .stage { flex: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }
+  .prompt { max-height: none; padding: 16px; }
+  .paper-wrap { flex: none; height: min(62vh, 560px); min-height: 300px; }
   .prompt.revealed { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .prompt.revealed .a { border-top: 0; border-left: 1.5px dashed var(--grid); padding-top: 0; padding-left: 16px; }
   .prompt .meta { grid-column: 1 / -1; }
