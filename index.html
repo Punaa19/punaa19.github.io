@@ -91,6 +91,40 @@ footer { margin-top: 48px; font-size: 12.5px; color: var(--muted); border-top: 1
 details summary { cursor: pointer; font-weight: 500; }
 textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
 @media (max-width: 560px) { .form { grid-template-columns: minmax(0, 1fr); } .sec { grid-template-columns: 72px minmax(0, 1fr); } .sec .jp { font-size: 18px; } }
+/* Ngữ pháp */
+.page#p-nguphap { max-width: 820px; }
+.g-meta { display: flex; gap: 8px 12px; align-items: center; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); margin: -8px 0 14px; }
+.g-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.g-tools input[type=search], .g-tools select { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; font-size: 15px; }
+.g-tools input[type=search] { flex: 1; min-width: 200px; }
+.seg2 { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg2 button { border: 0; background: var(--panel); padding: 7px 12px; cursor: pointer; font-size: 14px; color: var(--muted); }
+.seg2 button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.g-list { display: flex; flex-direction: column; gap: 12px; }
+.g-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; }
+.g-head { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; }
+.g-no { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.g-pat { font-family: var(--f-jp); font-size: 24px; line-height: 1.3; }
+.g-pill { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 14%, var(--panel)); color: var(--accent); }
+.g-learn { margin-left: auto; border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 3px 10px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.g-learn[aria-pressed="true"] { color: #2e7a4c; border-color: #2e7a4c; }
+.g-mean { font-size: 16.5px; font-weight: 500; }
+.g-row { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; align-items: start; }
+.g-lbl { font-size: 12.5px; color: var(--muted); padding-top: 4px; }
+.g-conn { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.g-conn .slot { padding: 1px 8px; border-radius: 5px; background: var(--bg); border: 1px solid var(--line); font-size: 14px; }
+.g-conn .fix { padding: 1px 8px; border-radius: 5px; font-family: var(--f-jp); background: color-mix(in srgb, #c98a12 16%, var(--panel)); color: #9a6508; }
+.g-conn .plus { color: var(--muted); font-size: 13px; }
+.g-conn .sub { color: var(--muted); font-size: 13px; }
+.g-ex { font-family: var(--f-jp); font-size: 18px; line-height: 1.6; }
+.g-ex mark { background: none; color: #9a6508; font-weight: 500; }
+.g-tr { font-size: 14.5px; color: var(--muted); }
+.g-note { font-size: 14px; color: var(--muted); }
+.g-say { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 0 4px; font-size: 18px; vertical-align: -2px; }
+.g-cover { border: 1px dashed var(--line); background: var(--bg); color: var(--muted); border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 14px; text-align: left; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .g-conn .fix, :root:not([data-theme="light"]) .g-ex mark { color: #e6b456; } }
+:root[data-theme="dark"] .g-conn .fix, :root[data-theme="dark"] .g-ex mark { color: #e6b456; }
+@media (max-width: 560px) { .g-row { grid-template-columns: minmax(0, 1fr); gap: 2px; } .g-pat { font-size: 21px; } }
 </style>
 </head>
 <body>
@@ -113,7 +147,7 @@ textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Con
     <h1>Trang chủ <span class="jp">ホーム</span></h1>
     <div class="sections">
       <a class="sec" href="#hoc"><span class="jp">学習</span><b>Học</b><p>5 trang luyện tập: gõ kana (Gojūon Drill), kiểm tra viết tay kana và kanji (Renshūchō), tập viết kana và kanji theo thứ tự nét.</p></a>
-      <a class="sec" href="#nguphap"><span class="jp">文法</span><b>Ngữ pháp</b><p>Các bài ngữ pháp N5 và N4, mỗi bài ngắn gọn kèm ví dụ.</p></a>
+      <a class="sec" href="#nguphap"><span class="jp">文法</span><b>Ngữ pháp</b><p>Mẫu ngữ pháp lấy từ Google Sheet: nghĩa, cách nối, câu ví dụ có đọc mẫu; chế độ che nghĩa để tự kiểm tra.</p></a>
       <a class="sec" href="#thuvien"><span class="jp">図書館</span><b>Thư viện</b><p>Sách, app, trang web và tài liệu đọc, nghe. Bạn tự thêm ngay trên trang.</p></a>
     </div>
   </section>
@@ -131,10 +165,15 @@ textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Con
 
   <section class="page" id="p-nguphap" data-title="Ngữ pháp" data-jp="文法">
     <h1>Ngữ pháp <span class="jp">文法</span></h1>
-    <h2>N5</h2>
-    <p class="todo">Danh sách bài ngữ pháp N5.</p>
-    <h2>N4</h2>
-    <p class="todo">Danh sách bài ngữ pháp N4.</p>
+    <div class="g-meta"><span id="gInfo">Đang tải tab Grammar 文型 từ Google Sheet…</span><button class="btn" type="button" id="gReload">Tải lại từ Sheet</button></div>
+    <div class="g-tools">
+      <input type="search" id="gSearch" placeholder="Tìm mẫu câu hoặc nghĩa, ví dụ “muốn”" aria-label="Tìm ngữ pháp">
+      <select id="gFilter" aria-label="Lọc"><option value="all">Tất cả</option><option value="todo">Chưa thuộc</option><option value="done">Đã thuộc</option></select>
+      <select id="gLevel" aria-label="Lọc theo JLPT" hidden></select>
+      <select id="gLesson" aria-label="Lọc theo bài" hidden></select>
+      <div class="seg2" role="group" aria-label="Chế độ"><button type="button" data-gmode="view" aria-pressed="true">Xem thẻ</button><button type="button" data-gmode="quiz" aria-pressed="false">Luyện: che nghĩa</button></div>
+    </div>
+    <div class="g-list" id="gList"></div>
   </section>
 
   <section class="page" id="p-thuvien" data-title="Thư viện" data-jp="図書館">
@@ -253,6 +292,169 @@ textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Con
   });
 
   render();
+})();
+</script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const SHEET = '1hzSKBFmbF4f1n-vG_iNa-Nbul-fiSMqZTSqSrFbQUL8', TAB = 'Grammar 文型';
+  const URL_CSV = `https://docs.google.com/spreadsheets/d/${SHEET}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(TAB)}`;
+  const KC = 'nihongo.grammar.cache.v1', KL = 'nihongo.grammar.learned.v1', KS = 'nihongo.grammar.ui.v1';
+  const get = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
+  const put = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  let learned = get(KL, {}), ui = Object.assign({ mode: 'view', filter: 'all', level: '', lesson: '' }, get(KS, {}));
+  let items = [], info = { at: 0, err: '' }, loading = false, opened = new Set();
+
+  function parseCSV(t) {
+    const rows = []; let row = [], f = '', q = false;
+    for (let i = 0; i < t.length; i++) {
+      const ch = t[i];
+      if (q) { if (ch === '"') { if (t[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === ',') { row.push(f); f = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && t[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += ch;
+    }
+    if (f || row.length) { row.push(f); rows.push(row); }
+    return rows;
+  }
+  const clean = v => String(v ?? '').trim();
+  function build(rows) {
+    let h = -1;
+    for (let i = 0; i < Math.min(rows.length, 20); i++) { const r = rows[i].map(c => clean(c).toLowerCase()); if (r.some(c => c.includes('pattern')) && r.some(c => c.includes('meaning'))) { h = i; break; } }
+    if (h < 0) return [];
+    const hd = rows[h].map(c => clean(c).toLowerCase());
+    const col = (...n) => hd.findIndex(c => n.some(x => c.includes(x)));
+    const ci = { pat: col('pattern', '文型'), pos: col('part of speech'), mean: col('meaning'), conn: col('connection', '接続'), note: col('note'), ex: col('example', '例文'), tr: col('translate', '翻訳'), jlpt: col('jlpt'), bai: col('bài') };
+    const at = (r, k) => ci[k] < 0 ? '' : clean(r[ci[k]]);
+    const out = [];
+    rows.slice(h + 1).forEach((r, i) => {
+      const pat = at(r, 'pat'); if (!pat) return;
+      out.push({ no: out.length + 1, pat, pos: at(r, 'pos'), mean: at(r, 'mean'), conn: at(r, 'conn'), note: at(r, 'note'), ex: at(r, 'ex'), tr: at(r, 'tr'), jlpt: at(r, 'jlpt'), bai: at(r, 'bai') });
+    });
+    return out;
+  }
+
+  /* cách nối: tách theo dấu +, phần chỉ có kana là phần cố định */
+  const KANA_ONLY = /^[\p{Script=Hiragana}\p{Script=Katakana}ー～〜・\/／\s]+$/u;
+  function splitConn(conn) {
+    let sub = '';
+    const m = conn.match(/\s*[(（]([^()（）]*\p{Script=Latin}[^()（）]*)[)）]\s*$/u);
+    if (m) { sub = m[1]; conn = conn.slice(0, m.index); }
+    const segs = conn.split(/\s*\+\s*/).map(x => x.trim()).filter(Boolean).map(t => ({ t, fix: KANA_ONLY.test(t) }));
+    return { segs, sub };
+  }
+  function connHtml(conn) {
+    if (!conn) return '';
+    const { segs, sub } = splitConn(conn);
+    return segs.map(x => `<span class="${x.fix ? 'fix' : 'slot'}">${esc(x.t)}</span>`).join('<span class="plus">+</span>') + (sub ? ` <span class="sub">(${esc(sub)})</span>` : '');
+  }
+  function exHtml(ex, conn) {
+    if (!ex) return '';
+    const { segs } = splitConn(conn || '');
+    const marks = []; let pos = 0, prevSlot = false;
+    segs.forEach(x => {
+      if (!x.fix) { prevSlot = true; return; }
+      for (const piece of x.t.split(/[・\/／]/).map(s => s.replace(/[～〜\s]/g, '')).filter(Boolean)) {
+        const k = ex.indexOf(piece, pos + (prevSlot ? 1 : 0));
+        if (k >= 0) { marks.push([k, k + piece.length]); pos = k + piece.length; break; }
+      }
+      prevSlot = false;
+    });
+    let out = '', last = 0;
+    marks.sort((a, b) => a[0] - b[0]).forEach(([a, b]) => { if (a < last) return; out += esc(ex.slice(last, a)) + '<mark>' + esc(ex.slice(a, b)) + '</mark>'; last = b; });
+    return out + esc(ex.slice(last));
+  }
+
+  /* đọc mẫu */
+  let jaVoice = null;
+  const pickVoice = () => { try { const v = speechSynthesis.getVoices().filter(x => /^ja/i.test(x.lang)); jaVoice = v.find(x => /Nanami|Natural|Google|Kyoko|O-ren/i.test(x.name)) || v[0] || null; } catch (e) {} };
+  if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.addEventListener?.('voiceschanged', pickVoice); }
+  function say(text) {
+    if (!('speechSynthesis' in window)) return;
+    try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'ja-JP'; if (jaVoice) u.voice = jaVoice; u.rate = 0.9; speechSynthesis.speak(u); } catch (e) {}
+  }
+
+  const norm = v => String(v ?? '').normalize('NFD').replace(/\p{M}/gu, '').replace(/[đĐ]/g, 'd').toLowerCase();
+  function fillSelect(el, key, label, val) {
+    const vals = [...new Set(items.map(x => x[key]).filter(Boolean))];
+    if (!vals.length) { el.hidden = true; return; }
+    vals.sort((a, b) => (parseFloat(a) - parseFloat(b)) || a.localeCompare(b));
+    el.hidden = false;
+    el.innerHTML = `<option value="">${label}: tất cả</option>` + vals.map(v => `<option value="${esc(v)}"${v === val ? ' selected' : ''}>${label} ${esc(v)}</option>`).join('');
+  }
+  function render() {
+    const q = norm($('#gSearch').value.trim());
+    document.querySelectorAll('[data-gmode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.gmode === ui.mode));
+    $('#gFilter').value = ui.filter;
+    const list = items.filter(x => {
+      if (ui.filter === 'todo' && learned[x.pat]) return false;
+      if (ui.filter === 'done' && !learned[x.pat]) return false;
+      if (ui.level && x.jlpt !== ui.level) return false;
+      if (ui.lesson && x.bai !== ui.lesson) return false;
+      if (q && !norm([x.pat, x.mean, x.pos, x.ex, x.tr, x.conn].join(' ')).includes(q)) return false;
+      return true;
+    });
+    const nDone = items.filter(x => learned[x.pat]).length;
+    $('#gInfo').textContent = loading && !items.length ? 'Đang tải tab Grammar 文型 từ Google Sheet…'
+      : !items.length ? (info.err ? `Chưa tải được Sheet: ${info.err}.` : 'Tab Grammar 文型 chưa có mẫu nào.')
+      : `${items.length} mẫu · đã thuộc ${nDone} · lấy từ tab Grammar 文型${info.at ? ', cập nhật ' + new Date(info.at).toLocaleString('vi-VN') : ''}${info.err ? ` (lần tải mới nhất lỗi: ${info.err})` : ''}`;
+    if (!items.length) { $('#gList').innerHTML = ''; return; }
+    if (!list.length) { $('#gList').innerHTML = '<p class="todo">Không có mẫu nào khớp bộ lọc.</p>'; return; }
+    const quiz = ui.mode === 'quiz';
+    $('#gList').innerHTML = list.map(x => {
+      const open = !quiz || opened.has(x.pat), id = esc(x.pat);
+      const hidden = what => `<button class="g-cover" type="button" data-open="${id}">Bấm để xem ${what}</button>`;
+      return `<article class="g-card">
+        <div class="g-head"><span class="g-no">${String(x.no).padStart(2, '0')}</span><span class="g-pat">${esc(x.pat)}</span>${x.pos ? `<span class="g-pill">${esc(x.pos)}</span>` : ''}${x.jlpt ? `<span class="g-pill">${esc(x.jlpt)}</span>` : ''}${x.bai ? `<span class="g-pill">Bài ${esc(x.bai)}</span>` : ''}
+          <button class="g-learn" type="button" data-learn="${id}" aria-pressed="${!!learned[x.pat]}">${learned[x.pat] ? '✓ Đã thuộc' : 'Đánh dấu đã thuộc'}</button></div>
+        ${x.mean ? (open ? `<div class="g-mean">${esc(x.mean)}</div>` : hidden('nghĩa')) : ''}
+        ${x.conn ? `<div class="g-row"><span class="g-lbl">Cách nối</span><div class="g-conn">${connHtml(x.conn)}</div></div>` : ''}
+        ${x.ex ? `<div class="g-row"><span class="g-lbl">Ví dụ</span><div><div class="g-ex">${exHtml(x.ex, x.conn)}<button class="g-say" type="button" data-say="${esc(x.ex)}" aria-label="Nghe câu ví dụ">🔊</button></div>${x.tr ? (open ? `<div class="g-tr">${esc(x.tr)}</div>` : hidden('bản dịch')) : ''}</div></div>` : ''}
+        ${x.note && open ? `<div class="g-row"><span class="g-lbl">Ghi chú</span><div class="g-note">${esc(x.note)}</div></div>` : ''}
+      </article>`;
+    }).join('');
+  }
+  function setItems(rows) {
+    items = build(rows);
+    fillSelect($('#gLevel'), 'jlpt', 'JLPT', ui.level);
+    fillSelect($('#gLesson'), 'bai', 'Bài', ui.lesson);
+    render();
+  }
+  async function load(manual) {
+    loading = true; render();
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 12000);
+    try {
+      const r = await fetch(URL_CSV, { signal: ctl.signal, cache: 'no-store' });
+      if (!r.ok) throw new Error('lỗi ' + r.status);
+      const t = await r.text();
+      if (/^\s*</.test(t)) throw new Error('Sheet chưa mở chia sẻ');
+      const rows = parseCSV(t);
+      info = { at: Date.now(), err: '' }; put(KC, { at: info.at, rows });
+      loading = false; setItems(rows);
+      if (manual) $('#gInfo').textContent += ' · đã tải lại';
+    } catch (e) {
+      info.err = e.name === 'AbortError' ? 'mạng chậm, hết thời gian chờ' : (e.message || 'không rõ lỗi');
+      loading = false; render();
+    } finally { clearTimeout(tm); }
+  }
+
+  $('#gSearch').addEventListener('input', render);
+  $('#gFilter').addEventListener('change', e => { ui.filter = e.target.value; put(KS, ui); render(); });
+  $('#gLevel').addEventListener('change', e => { ui.level = e.target.value; put(KS, ui); render(); });
+  $('#gLesson').addEventListener('change', e => { ui.lesson = e.target.value; put(KS, ui); render(); });
+  $('#gReload').addEventListener('click', () => load(true));
+  document.querySelector('#p-nguphap').addEventListener('click', e => {
+    const m = e.target.closest('[data-gmode]'); if (m) { ui.mode = m.dataset.gmode; opened.clear(); put(KS, ui); render(); return; }
+    const o = e.target.closest('[data-open]'); if (o) { opened.add(o.dataset.open); render(); return; }
+    const l = e.target.closest('[data-learn]'); if (l) { const k = l.dataset.learn; if (learned[k]) delete learned[k]; else learned[k] = Date.now(); put(KL, learned); render(); return; }
+    const s = e.target.closest('[data-say]'); if (s) say(s.dataset.say);
+  });
+
+  const cache = get(KC, null);
+  if (cache && cache.rows) { info.at = cache.at || 0; setItems(cache.rows); }
+  load();
 })();
 </script>
 </body>
