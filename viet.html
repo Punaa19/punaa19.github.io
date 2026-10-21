@@ -91,6 +91,10 @@ button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2p
 }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .seg button:disabled { opacity: .35; cursor: not-allowed; }
+.nav-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.nav-actions .icon-btn:disabled { opacity: .4; cursor: not-allowed; }
+.nav-actions .icon-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.nav-actions .go { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 600; }
 a.icon-btn { text-decoration: none; color: var(--ink); display: inline-flex; align-items: center; }
 .icon-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px; font-size: 14px; font-weight: 500; min-height: 36px; }
 
@@ -247,6 +251,11 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
       <button data-seg="mode" data-v="dict">Nghe – viết</button>
     </div>
     <div class="seg" id="promptSeg" role="group" aria-label="Kiểu đề"></div>
+    <div class="nav-actions">
+      <button class="icon-btn" data-act="shuffle" id="btnShuffle" aria-pressed="false" title="Cho từ ra theo thứ tự ngẫu nhiên">Đảo thứ tự</button>
+      <button class="icon-btn" data-act="skip" id="btnSkip" title="Bỏ qua từ này, không chấm điểm (phím S)">Đổi từ</button>
+      <button class="icon-btn go" data-act="next" id="btnNext" title="Phím N">Chấm bài</button>
+    </div>
   </nav>
 
   <main class="stage">
@@ -331,7 +340,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(LS)) || {}; } catch (e) { saved = {}; }
   const store = { progress: saved.progress || {}, mine: saved.mine || '', settings: saved.settings || {} };
-  const S = Object.assign({ deck: 'hira', mode: 'fc', newPer: 10, trace: false, penOnly: false, penAuto: false }, store.settings);
+  const S = Object.assign({ deck: 'hira', mode: 'fc', newPer: 10, trace: false, penOnly: false, penAuto: false, shuffle: false }, store.settings);
   S.prompt = Object.assign({ fc: 'vi-kana', dict: 'audio-kana' }, store.settings.prompt || {});
   store.settings = S;
   function save() { try { localStorage.setItem(LS, JSON.stringify(store)); } catch (e) {} }
@@ -518,8 +527,8 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     if (opts.free) q = shuffle(cards.slice()).slice(0, 15);
     else {
       const due = cards.filter(c => p[c.id] && p[c.id].d <= now).sort((a, b) => p[a.id].d - p[b.id].d);
-      const fresh = cards.filter(c => !p[c.id]).slice(0, S.newPer);
-      q = [...due, ...fresh];
+      const fresh = (S.shuffle ? shuffle(cards.filter(c => !p[c.id])) : cards.filter(c => !p[c.id])).slice(0, S.newPer);
+      q = S.shuffle ? shuffle([...due, ...fresh]) : [...due, ...fresh];
     }
     session = { queue: q.map(c => c.id), free: !!opts.free, stats: { again: 0, hard: 0, good: 0, easy: 0 }, total: q.length, seen: 0 };
     $('#doneView').hidden = true;
@@ -537,6 +546,18 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     strokes = []; history = [];
     renderPrompt(); renderTools(); layoutGrid(); redraw(); loadGhostFont();
     if (autoplay && cur.p === 'audio' && interacted) speak(card.kana);
+  }
+
+  function skipCard() {
+    if (!cur) return;
+    if (session.queue.length < 2) { toast('Lượt này chỉ còn 1 từ.'); return; }
+    session.queue.push(session.queue.shift());
+    showCard();
+  }
+  function nextCard() {
+    if (!cur) return;
+    if (!cur.revealed) { reveal(); return; }
+    grade(cur.check ? cur.check.grade : 'good');
   }
 
   function showEmpty() {
@@ -656,7 +677,7 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
         <div class="ans-jp">${esc(c.kanji || c.kana)}</div>
         <dl class="ans-dl">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
         ${ckHtml}
-        <div class="pm-cap">Máy chỉ so hình dạng, vị trí và cỡ chữ với mẫu, không kiểm tra thứ tự nét. Nhấn Enter để nhận điểm máy chấm, hoặc tự chọn nút khác.</div>`;
+        <div class="pm-cap">Máy chỉ so hình dạng, vị trí và cỡ chữ với mẫu, không kiểm tra thứ tự nét. Bấm Từ tiếp theo (hoặc Enter) để nhận điểm máy chấm, hoặc tự chọn nút khác.</div>`;
       a.hidden = false; a.classList.remove('reveal-in'); void a.offsetWidth; a.classList.add('reveal-in');
     } else a.hidden = true;
     $('#promptPanel').classList.toggle('revealed', cur.revealed);
@@ -672,6 +693,10 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     $('#grades').hidden = !(has && cur.revealed);
     $('#btnTrace').setAttribute('aria-pressed', S.trace);
     $('#btnPen').setAttribute('aria-pressed', S.penOnly);
+    $('#btnShuffle').setAttribute('aria-pressed', !!S.shuffle);
+    $('#btnSkip').disabled = !has;
+    $('#btnNext').disabled = !has;
+    $('#btnNext').textContent = has && cur.revealed ? 'Từ tiếp theo →' : 'Chấm bài';
     if (has && cur.revealed) {
       const p = prog()[cur.card.id], now = Date.now();
       ['again', 'hard', 'good', 'easy'].forEach(g => {
@@ -973,6 +998,9 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     const act = b.dataset.act;
     switch (act) {
       case 'flip': reveal(); break;
+      case 'next': nextCard(); break;
+      case 'skip': skipCard(); break;
+      case 'shuffle': S.shuffle = !S.shuffle; save(); toast(S.shuffle ? 'Đã bật đảo thứ tự: từ ra ngẫu nhiên.' : 'Đã tắt đảo thứ tự.'); startSession(); break;
       case 'grade': grade(b.dataset.g); break;
       case 'undo': undo(); break;
       case 'clear': clearInk(); break;
@@ -1022,6 +1050,8 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     if (cur && cur.revealed && '1234'.includes(e.key)) { e.preventDefault(); grade(['again', 'hard', 'good', 'easy'][+e.key - 1]); return; }
     if ((e.key === 'z' && (e.metaKey || e.ctrlKey)) || e.key === 'Backspace') { e.preventDefault(); undo(); return; }
     if (e.key === 'p' && cur) speak(cur.card.kana);
+    if (e.key === 'n' && cur) nextCard();
+    if (e.key === 's' && cur) skipCard();
   });
 
   const themeRedraw = () => redraw();
