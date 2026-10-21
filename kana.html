@@ -54,6 +54,8 @@ header p { margin: 4px 0 0; color: var(--muted); max-width: 65ch; }
 @media (min-width: 980px) { .layout { grid-template-columns: minmax(360px, 5fr) minmax(0, 7fr); } .drill { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); } }
 
 .layout.chart-hidden .chart { display: none; }
+.toggle.hide-btn { color: var(--accent); border-color: var(--accent); font-weight: 600; }
+.chart-head .hide-btn { margin-left: auto; }
 @media (min-width: 980px) { .layout.chart-hidden { grid-template-columns: minmax(0, 760px); justify-content: center; } .layout.chart-hidden .drill { position: static; } }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); }
 .drill { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
@@ -168,7 +170,7 @@ td { padding: 0; }
         <div class="spacer"></div>
         <button class="toggle" id="tAuto" data-act="auto">Tự đọc</button>
         <button class="toggle" id="tFont" data-act="fontname">Tên phông</button>
-        <button class="toggle" id="tChart" data-act="chart" title="Ẩn bảng chữ bên cạnh để không nhìn thấy đáp án">Ẩn bảng chữ</button>
+        <button class="toggle hide-btn" id="tChart" data-act="chart" hidden>Hiện bảng chữ</button>
       </div>
 
       <div class="stage" id="stage">
@@ -196,6 +198,7 @@ td { padding: 0; }
           <button data-script="k">Katakana</button>
         </div>
         <span class="count" id="count"></span>
+        <button class="toggle hide-btn" data-act="chart" title="Ẩn bảng chữ để không nhìn thấy đáp án khi luyện">Ẩn bảng chữ</button>
       </div>
       <div id="tables"></div>
       <div class="legend"><span>Màu nền theo tỉ lệ sai:</span><span>ít</span><i></i><span>nhiều</span><span class="spacer"></span><button class="link" data-act="reset" id="resetBtn">Xoá thống kê</button></div>
@@ -517,8 +520,7 @@ td { padding: 0; }
     document.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === S.mode));
     $('#tAuto').setAttribute('aria-pressed', S.auto);
     $('#tFont').setAttribute('aria-pressed', S.fontName);
-    $('#tChart').textContent = S.hideChart ? 'Hiện bảng chữ' : 'Ẩn bảng chữ';
-    $('#tChart').setAttribute('aria-pressed', S.hideChart);
+    $('#tChart').hidden = !S.hideChart;
     $('#layout').classList.toggle('chart-hidden', S.hideChart);
   }
 
