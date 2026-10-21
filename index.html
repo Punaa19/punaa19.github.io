@@ -63,9 +63,9 @@ footer { margin-top: 48px; font-size: 12.5px; color: var(--muted); border-top: 1
 
 /* Trang chủ: mỗi mục một dòng */
 .sections { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
-.sec { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 4px 16px; padding: 16px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+.sec { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 4px 16px; padding: 16px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
 .sec:hover { background: var(--panel); }
-.sec .jp { font-family: var(--f-jp); font-size: 26px; line-height: 1.2; color: var(--accent); grid-row: span 2; }
+.sec .jp { font-family: var(--f-jp); font-size: 24px; line-height: 1.2; color: var(--accent); grid-row: span 2; }
 .sec b { font-size: 17px; font-weight: 600; }
 .sec p { margin: 0; color: var(--muted); font-size: 14.5px; }
 
@@ -90,7 +90,7 @@ footer { margin-top: 48px; font-size: 12.5px; color: var(--muted); border-top: 1
 .status { font-size: 13.5px; color: var(--muted); min-height: 1.4em; }
 details summary { cursor: pointer; font-weight: 500; }
 textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
-@media (max-width: 560px) { .form { grid-template-columns: minmax(0, 1fr); } .sec { grid-template-columns: 52px minmax(0, 1fr); } .sec .jp { font-size: 22px; } }
+@media (max-width: 560px) { .form { grid-template-columns: minmax(0, 1fr); } .sec { grid-template-columns: 72px minmax(0, 1fr); } .sec .jp { font-size: 18px; } }
 </style>
 </head>
 <body>
@@ -112,7 +112,7 @@ textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Con
   <section class="page" id="p-home" data-title="Trang chủ" data-jp="ホーム">
     <h1>Trang chủ <span class="jp">ホーム</span></h1>
     <div class="sections">
-      <a class="sec" href="#hoc"><span class="jp">学習</span><b>Học</b><p>Công cụ luyện tập: gõ kana để nhớ mặt chữ (Gojūon Drill), viết tay kana và từ vựng có máy chấm (Renshūchō).</p></a>
+      <a class="sec" href="#hoc"><span class="jp">学習</span><b>Học</b><p>4 trang luyện tập: gõ kana (Gojūon Drill), kiểm tra viết tay (Renshūchō), tập viết kana và tập viết kanji theo thứ tự nét.</p></a>
       <a class="sec" href="#nguphap"><span class="jp">文法</span><b>Ngữ pháp</b><p>Các bài ngữ pháp N5 và N4, mỗi bài ngắn gọn kèm ví dụ.</p></a>
       <a class="sec" href="#thuvien"><span class="jp">図書館</span><b>Thư viện</b><p>Sách, app, trang web và tài liệu đọc, nghe. Bạn tự thêm ngay trên trang.</p></a>
     </div>
@@ -120,17 +120,12 @@ textarea { width: 100%; min-height: 110px; font-family: ui-monospace, Menlo, Con
 
   <section class="page" id="p-hoc" data-title="Học" data-jp="学習">
     <h1>Học <span class="jp">学習</span></h1>
-    <h2>Lộ trình</h2>
-    <p class="todo">Các bước: kana → từ vựng cơ bản → ngữ pháp N5 → đọc dễ…</p>
-    <h2>Công cụ luyện tập</h2>
-    <div class="box">
-      <ul class="list">
-        <li><a href="kana.html">Gojūon Drill</a>: nhìn hoặc nghe kana rồi gõ romaji</li>
-        <li><a href="viet.html">Renshūchō</a>: luyện viết tay kana và từ vựng</li>
-      </ul>
+    <div class="sections">
+      <a class="sec" href="kana.html"><span class="jp">五十音</span><b>Gojūon Drill</b><p>Nhìn hoặc nghe kana rồi gõ romaji, luyện tới khi nhớ mặt chữ.</p></a>
+      <a class="sec" href="viet.html"><span class="jp">練習帳</span><b>Renshūchō</b><p>Kiểm tra viết tay: xem nghĩa, romaji hoặc nghe đọc, viết ra kana hay kanji, máy chấm Đúng hoặc Sai.</p></a>
+      <a class="sec" href="kaku.html#kana"><span class="jp">かな</span><b>Tập viết kana</b><p>Vở tập viết hiragana và katakana: thứ tự từng nét, 3 hàng ô để luyện, hàng đầu có chữ mờ để tô.</p></a>
+      <a class="sec" href="kaku.html#kanji"><span class="jp">漢字</span><b>Tập viết kanji</b><p>Vở tập viết kanji N5, kèm nghĩa, âm Hán Việt, âm On và âm Kun.</p></a>
     </div>
-    <h2>Mẹo học</h2>
-    <p class="todo">Ghi chú cách học hiệu quả.</p>
   </section>
 
   <section class="page" id="p-nguphap" data-title="Ngữ pháp" data-jp="文法">
