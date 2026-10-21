@@ -858,8 +858,8 @@ textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--
     const dx = ((bu[0] + bu[2]) - (bt[0] + bt[2])) / 2 / N, dy = ((bu[1] + bu[3]) - (bt[1] + bt[3])) / 2 / N;
     const size = Math.sqrt(((bu[2] - bu[0] + 1) * (bu[3] - bu[1] + 1)) / ((bt[2] - bt[0] + 1) * (bt[3] - bt[1] + 1)));
     const off = Math.hypot(dx, dy);
-    let g = F >= 0.85 ? 3 : F >= 0.68 ? 2 : F >= 0.5 ? 1 : 0;
-    if (off > 0.12 || size < 0.8 || size > 1.2) g = 0;
+    let g = F >= 0.85 ? 3 : F >= 0.68 ? 2 : F >= 0.6 ? 1 : 0;
+    if (off > 0.1 || size < 0.8 || size > 1.2) g = 0;
     else if (off > 0.06 || size < 0.9 || size > 1.1) g = Math.min(g, 1);
     const issues = [];
     if (off > 0.06) {
