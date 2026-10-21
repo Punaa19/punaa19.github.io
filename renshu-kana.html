@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2f4a9e">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Renshūchō Kana 練習帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Klee+One:wght@400;600&display=swap">
+<style>
+/* Layout: a practice desk — prompt card on the left, a genkō-yōshi writing sheet filling the rest; stacks on portrait/phone. */
+:root {
+  --bg: #e9eeea;
+  --paper: #fbfcfa;
+  --surface: #f3f6f3;
+  --line: #cfd8d1;
+  --grid: #5f9070;
+  --ink: #1b2320;
+  --muted: #5b6862;
+  --accent: #2c4a7e;
+  --accent-ink: #f4f7fc;
+  --again: #b4432d;
+  --hard: #a86f12;
+  --good: #2e7a4c;
+  --easy: #2c4a7e;
+  --f-jp: "Klee One", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-ui: "Be Vietnam Pro", -apple-system, system-ui, "Segoe UI", sans-serif;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121715; --paper: #1a201d; --surface: #212824; --line: #33403a; --grid: #5b8a6b;
+    --ink: #e6ece7; --muted: #97a49d; --accent: #94b3ea; --accent-ink: #0f1626;
+    --again: #e58069; --hard: #dcaa52; --good: #72c693; --easy: #94b3ea;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121715; --paper: #1a201d; --surface: #212824; --line: #33403a; --grid: #5b8a6b;
+  --ink: #e6ece7; --muted: #97a49d; --accent: #94b3ea; --accent-ink: #0f1626;
+  --again: #e58069; --hard: #dcaa52; --good: #72c693; --easy: #94b3ea;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-ui); font-size: 15px; line-height: 1.5;
+  overflow: hidden;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app {
+  height: 100%; display: flex; flex-direction: column; gap: 12px;
+  padding-block: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Header */
+.top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.mark {
+  width: 40px; height: 40px; display: grid; place-items: center;
+  border: 1.5px solid var(--grid); border-radius: 4px;
+  font-family: var(--f-jp); font-weight: 600; font-size: 24px; color: var(--grid);
+  background:
+    linear-gradient(var(--grid), var(--grid)) center / 1px 100% no-repeat,
+    linear-gradient(var(--grid), var(--grid)) center / 100% 1px no-repeat;
+  background-blend-mode: normal;
+  position: relative;
+}
+.mark span { background: var(--bg); line-height: 1; padding: 1px; }
+.brand b { display: block; font-weight: 600; font-size: 17px; letter-spacing: .01em; }
+.brand small { display: block; color: var(--muted); font-size: 12.5px; margin-top: -2px; }
+.stats { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; font-variant-numeric: tabular-nums; }
+.stat { font-size: 13px; color: var(--muted); padding: 4px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.stat b { color: var(--ink); font-weight: 600; }
+
+/* Controls */
+.controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); flex-wrap: wrap; }
+.seg button {
+  border: 0; background: transparent; padding: 7px 14px; border-radius: 999px; font-size: 14px; font-weight: 500;
+  min-height: 36px; color: var(--muted);
+}
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.seg button:disabled { opacity: .35; cursor: not-allowed; }
+.nav-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.nav-actions .icon-btn:disabled { opacity: .4; cursor: not-allowed; }
+.nav-actions .icon-btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.nav-actions .go { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 600; }
+a.brand { text-decoration: none; color: inherit; border-radius: 8px; }
+a.brand:hover b { color: var(--accent); }
+a.icon-btn { text-decoration: none; color: var(--ink); display: inline-flex; align-items: center; }
+.icon-btn.gear { display: inline-flex; align-items: center; padding: 7px 10px; }
+.icon-btn.gear svg { width: 18px; height: 18px; }
+.icon-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px; font-size: 14px; font-weight: 500; min-height: 36px; }
+
+/* Stage */
+.stage { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(250px, 330px) minmax(0, 1fr); gap: 14px; position: relative; }
+.prompt {
+  background: var(--paper); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 18px;
+  overflow: auto; min-height: 0;
+}
+.q, .a { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.pm-vi { font-size: clamp(26px, 3.2vw, 36px); font-weight: 600; line-height: 1.2; text-wrap: balance; }
+.pm-roma { font-size: clamp(36px, 5vw, 58px); font-weight: 500; letter-spacing: .04em; line-height: 1.1; }
+.pm-jp { font-family: var(--f-jp); font-size: clamp(52px, 7vw, 88px); line-height: 1.1; font-weight: 600; }
+.pm-cap { font-size: 13px; color: var(--muted); }
+.play-big {
+  width: 92px; height: 92px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center;
+}
+.play-big svg { width: 40px; height: 40px; }
+.hint-text { font-size: 15px; color: var(--ink); padding: 8px 12px; border-radius: 10px; background: var(--surface); border: 1px dashed var(--line); }
+.note { font-size: 13px; color: var(--hard); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.a { border-top: 1.5px dashed var(--grid); padding-top: 16px; }
+.a[hidden] { display: none !important; }
+.ans-jp { font-family: var(--f-jp); font-weight: 600; font-size: clamp(40px, 5vw, 60px); line-height: 1.15; }
+.ans-kana { font-family: var(--f-jp); font-size: 26px; color: var(--accent); }
+.ans-dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 15px; }
+.ans-dl dt { color: var(--muted); font-size: 13px; padding-top: 2px; }
+.ans-dl dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.meta { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); }
+.empty b { color: var(--ink); display: block; font-size: 18px; margin-bottom: 4px; }
+
+.desk { display: flex; flex-direction: column; gap: 10px; min-height: 0; min-width: 0; }
+.paper-wrap {
+  flex: 1; min-height: 0; position: relative; background: var(--paper);
+  border: 1px solid var(--line); border-radius: var(--r); overflow: hidden;
+}
+#pad { position: absolute; inset: 0; touch-action: none; display: block; }
+.paper-foot {
+  position: absolute; right: 14px; bottom: 8px; font-size: 12px; color: var(--muted); pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.paper-foot .jp { font-family: var(--f-jp); }
+
+.tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.spacer { flex: 1; }
+.btn {
+  min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--paper); font-weight: 500; font-size: 14.5px; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--paper)); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 600; padding: 0 22px; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.kbd { font-size: 11px; opacity: .65; border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; line-height: 16px; }
+.grades { display: flex; gap: 8px; flex-wrap: wrap; }
+.grades[hidden] { display: none !important; }
+.grade {
+  min-height: 52px; min-width: 84px; padding: 4px 14px; border-radius: 10px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; line-height: 1.2; font-variant-numeric: tabular-nums;
+}
+.grade b { font-weight: 600; font-size: 15px; }
+.grade span { font-size: 12px; opacity: .85; }
+.g-again { --c: var(--again); } .g-hard { --c: var(--hard); } .g-good { --c: var(--good); } .g-easy { --c: var(--easy); }
+.grade { color: var(--c); background: color-mix(in srgb, var(--c) 11%, var(--paper)); border: 1px solid color-mix(in srgb, var(--c) 38%, transparent); }
+.grade.suggest { outline: 3px solid var(--c); outline-offset: 2px; }
+.tally-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.tbox { min-width: 78px; padding: 6px 12px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; line-height: 1.2; font-variant-numeric: tabular-nums; color: var(--c); background: color-mix(in srgb, var(--c) 11%, var(--paper)); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); }
+.tbox b { font-size: 18px; font-weight: 600; }
+.tbox span { font-size: 12px; }
+.t-done { --c: var(--ink); }
+.check { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; color: var(--c); background: color-mix(in srgb, var(--c) 10%, var(--paper)); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); }
+.check b { font-size: 15px; }
+.check ul { margin: 0; padding-left: 18px; color: var(--ink); font-size: 13.5px; }
+.check .nums { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Done */
+.done { position: absolute; inset: 0; background: var(--bg); display: grid; place-items: center; z-index: 2; padding: 12px; }
+.done-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); padding: 28px; max-width: 460px; width: 100%; display: flex; flex-direction: column; gap: 16px; }
+.done-card h2 { margin: 0; font-size: 24px; text-wrap: balance; }
+.done-card h2 .jp { font-family: var(--f-jp); color: var(--grid); margin-right: 8px; }
+.tally { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-variant-numeric: tabular-nums; }
+.tally div { text-align: center; padding: 10px 4px; border-radius: 10px; color: var(--c); background: color-mix(in srgb, var(--c) 11%, var(--paper)); }
+.tally b { display: block; font-size: 22px; }
+.tally span { font-size: 12px; }
+
+/* Sheet */
+.sheet { position: fixed; inset: 0; z-index: 20; background: color-mix(in srgb, var(--ink) 35%, transparent); display: flex; justify-content: flex-end; }
+.sheet-panel {
+  width: min(460px, 100%); height: 100%; background: var(--paper); overflow: auto;
+  padding-block: calc(20px + env(safe-area-inset-top, 0px)) calc(20px + env(safe-area-inset-bottom, 0px));
+  padding-left: 22px; padding-right: max(22px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 22px; -webkit-user-select: text; user-select: text;
+}
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sheet-head h2 { margin: 0; font-size: 20px; }
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field label, .field .lbl { font-weight: 600; font-size: 14px; }
+.field p { margin: 0; font-size: 13px; color: var(--muted); }
+.field code { font-family: var(--f-jp); font-size: 14px; color: var(--ink); background: var(--surface); padding: 1px 6px; border-radius: 4px; }
+select, textarea {
+  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+}
+textarea { min-height: 220px; resize: vertical; font-family: var(--f-jp), var(--f-ui); font-size: 16px; line-height: 1.6; }
+.status { font-size: 13px; color: var(--good); min-height: 1.2em; }
+.status.err { color: var(--again); }
+.danger { color: var(--again); border-color: color-mix(in srgb, var(--again) 40%, transparent); }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 30;
+  max-width: calc(100% - 32px); text-align: center;
+}
+
+.reveal-in { animation: rise .22s ease-out; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .reveal-in { animation: none; } }
+
+/* Portrait iPad & narrow screens: stack */
+@media (max-height: 760px) and (min-width: 900px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100%; }
+  .stage { flex: none; }
+  .paper-wrap { flex: none; height: max(340px, 62vh); }
+}
+@media (max-width: 899px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100%; }
+  .stage { flex: none; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }
+  .prompt { max-height: none; padding: 16px; }
+  .paper-wrap { flex: none; height: min(62vh, 560px); min-height: 300px; }
+  .prompt.revealed { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .prompt.revealed .a { border-top: 0; border-left: 1.5px dashed var(--grid); padding-top: 0; padding-left: 16px; }
+  .prompt .meta { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100%; }
+  .stage { flex: none; }
+  .prompt { max-height: none; }
+  .prompt.revealed { grid-template-columns: minmax(0, 1fr); }
+  .prompt.revealed .a { border-left: 0; padding-left: 0; border-top: 1.5px dashed var(--grid); padding-top: 14px; }
+  .paper-wrap { flex: none; height: 62vh; min-height: 320px; }
+  .stats { margin-left: 0; }
+  .grade { min-width: 0; flex: 1; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="brand" href="index.html" title="Về trang chủ">
+      <div class="mark" aria-hidden="true"><span>練</span></div>
+      <div><b>Renshūchō Kana</b><small>Kiểm tra viết hiragana, katakana</small></div>
+    </a>
+    <div class="stats" id="stats"></div>
+    <button class="icon-btn gear" data-act="settings" id="btnSettings" title="Cài đặt" aria-label="Cài đặt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  </header>
+
+  <nav class="controls" aria-label="Chọn bài luyện">
+    <div class="seg" id="deckSeg" role="group" aria-label="Bảng chữ"></div>
+    <div class="seg" id="modeSeg" role="group" aria-label="Chế độ">
+      <button data-seg="mode" data-v="fc">Thẻ nhớ</button>
+      <button data-seg="mode" data-v="dict">Nghe – viết</button>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" data-act="restart" id="btnRestart" title="Làm lại các từ của lượt này từ đầu, đếm lại đúng sai">Làm lại</button>
+      <button class="icon-btn" data-act="skip" id="btnSkip" title="Bỏ qua từ này, không chấm điểm (phím S)">Đổi từ</button>
+      <button class="icon-btn go" data-act="next" id="btnNext" title="Phím N">Chấm bài</button>
+    </div>
+  </nav>
+
+  <main class="stage">
+    <section class="prompt" id="promptPanel" aria-live="polite">
+      <div class="q" id="q"></div>
+      <div class="a" id="a" hidden></div>
+      <div class="meta" id="meta"></div>
+    </section>
+
+    <section class="desk">
+      <div class="paper-wrap" id="paperWrap">
+        <canvas id="pad" aria-label="Ô viết tay"></canvas>
+        <div class="paper-foot" id="paperFoot"></div>
+      </div>
+      <div class="tools">
+        <button class="btn" data-act="undo" id="btnUndo">Hoàn tác</button>
+        <button class="btn" data-act="clear" id="btnClear">Xoá hết</button>
+        <button class="btn" data-act="trace" id="btnTrace" aria-pressed="false">Tô theo mẫu</button>
+        <button class="btn" data-act="pen" id="btnPen" aria-pressed="false">Chỉ nhận bút</button>
+        <div class="tally-bar" id="tallyBar" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <div class="done" id="doneView" hidden>
+      <div class="done-card" id="doneCard"></div>
+    </div>
+  </main>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head">
+      <h2 id="sheetTitle">Cài đặt</h2>
+      <button class="icon-btn" data-act="close-settings">Đóng</button>
+    </div>
+
+    <div class="field">
+      <label for="newPer">Số thẻ mới mỗi lượt</label>
+      <select id="newPer">
+        <option value="5">5 thẻ</option><option value="10">10 thẻ</option><option value="20">20 thẻ</option><option value="30">30 thẻ</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <span class="lbl">Giọng đọc tiếng Nhật</span>
+      <p id="voiceNote">Đang kiểm tra…</p>
+      <div class="row"><button class="btn" data-act="test-voice">Nghe thử</button></div>
+    </div>
+
+    <div class="field">
+      <span class="lbl">Tiến độ</span>
+      <p>Tiến độ lưu trong trình duyệt của thiết bị này. Xoá sẽ đưa mọi thẻ của bộ đang chọn về trạng thái mới, ở cả hai chế độ.</p>
+      <div class="row" id="resetRow"><button class="btn danger" data-act="reset">Xoá tiến độ bộ này</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ---------- storage ---------- */
+  const LS = 'renshucho.kana.v1';
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(LS)) || null; } catch (e) { saved = null; }
+  if (!saved) {
+    /* lần đầu: chép tiến độ hiragana/katakana từ Renshūchō cũ */
+    saved = { progress: {}, settings: {} };
+    try {
+      const old = JSON.parse(localStorage.getItem('renshucho.v1')) || {};
+      ['fc', 'dict'].forEach(m => {
+        const p = (old.progress || {})[m] || {}, q = {};
+        Object.keys(p).forEach(id => { if (/^[hk]-/.test(id)) q[id] = p[id]; });
+        saved.progress[m] = q;
+      });
+      const os = old.settings || {};
+      ['mode', 'newPer', 'trace', 'penOnly', 'penAuto'].forEach(k => { if (os[k] !== undefined) saved.settings[k] = os[k]; });
+      if (os.deck === 'kata') saved.settings.deck = 'kata';
+    } catch (e) {}
+  }
+  const store = { progress: saved.progress || {}, settings: saved.settings || {} };
+  const S = Object.assign({ deck: 'hira', mode: 'fc', newPer: 10, trace: false, penOnly: false, penAuto: false, shuffle: false }, store.settings);
+  store.settings = S;
+  function save() { try { localStorage.setItem(LS, JSON.stringify(store)); } catch (e) {} }
+
+  /* ---------- romaji ---------- */
+  const ROMA = {
+    'あ':'a','い':'i','う':'u','え':'e','お':'o','か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko','が':'ga','ぎ':'gi','ぐ':'gu','げ':'ge','ご':'go',
+    'さ':'sa','し':'shi','す':'su','せ':'se','そ':'so','ざ':'za','じ':'ji','ず':'zu','ぜ':'ze','ぞ':'zo','た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to',
+    'だ':'da','ぢ':'ji','づ':'zu','で':'de','ど':'do','な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no','は':'ha','ひ':'hi','ふ':'fu','へ':'he','ほ':'ho',
+    'ば':'ba','び':'bi','ぶ':'bu','べ':'be','ぼ':'bo','ぱ':'pa','ぴ':'pi','ぷ':'pu','ぺ':'pe','ぽ':'po','ま':'ma','み':'mi','む':'mu','め':'me','も':'mo',
+    'や':'ya','ゆ':'yu','よ':'yo','ら':'ra','り':'ri','る':'ru','れ':'re','ろ':'ro','わ':'wa','を':'wo','ん':'n','ゔ':'vu',
+    'ぁ':'a','ぃ':'i','ぅ':'u','ぇ':'e','ぉ':'o','ゃ':'ya','ゅ':'yu','ょ':'yo','ゎ':'wa'
+  };
+  const SMALL_Y = { 'ゃ': 'a', 'ゅ': 'u', 'ょ': 'o' };
+  const SMALL_V = { 'ぁ': 'a', 'ぃ': 'i', 'ぅ': 'u', 'ぇ': 'e', 'ぉ': 'o' };
+  const toHira = s => s.replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+  function romaji(kana) {
+    const s = Array.from(toHira(kana));
+    let out = '', sokuon = false;
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+      if (ch === 'っ') { sokuon = true; continue; }
+      if (ch === 'ー') { const m = out.match(/[aeiou]$/); out += m ? m[0] : ''; continue; }
+      let r = ROMA[ch];
+      if (r === undefined) { out += ch; continue; }
+      const nx = s[i + 1];
+      if (nx && SMALL_Y[nx] && r.length > 1 && r.endsWith('i')) {
+        const b = r.slice(0, -1); r = (/(sh|ch|j)$/.test(b) ? b : b + 'y') + SMALL_Y[nx]; i++;
+      } else if (nx && SMALL_V[nx] && r.length > 1) {
+        r = r.slice(0, -1) + SMALL_V[nx]; i++;
+      }
+      if (sokuon) { r = (r.startsWith('ch') ? 't' : r[0]) + r; sokuon = false; }
+      out += r;
+    }
+    return out;
+  }
+  const scriptOf = s => {
+    const k = /[ァ-ヺ]/.test(s), h = /[ぁ-ゖ]/.test(s);
+    return k && !h ? 'katakana' : h && !k ? 'hiragana' : 'kana';
+  };
+
+  /* ---------- decks ---------- */
+  const mk = (id, kana, kanji = '', vi = '', hv = '') => ({ id, kana, kanji, vi, hv, roma: romaji(kana) });
+  const H = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん';
+  const HIRA = Array.from(H).map(c => mk('h-' + c, c));
+  const KATA = Array.from(H).map(c => { const k = String.fromCharCode(c.charCodeAt(0) + 0x60); return mk('k-' + k, k); });
+
+
+  const DECKS = {
+    hira: { name: 'Hiragana', vocab: false, cards: () => HIRA },
+    kata: { name: 'Katakana', vocab: false, cards: () => KATA }
+  };
+
+  const deck = () => DECKS[S.deck] || DECKS.hira;
+  const cardById = id => deck().cards().find(c => c.id === id);
+  const effPrompt = () => S.mode === 'fc' ? 'roma-kana' : 'audio-kana';
+
+  /* ---------- SRS ---------- */
+  const DAY = 864e5;
+  const prog = () => (store.progress[S.mode] = store.progress[S.mode] || {});
+  function schedule(s, g, now = Date.now()) {
+    s = s ? { ...s } : { e: 2.5, i: 0, r: 0, d: 0 };
+    if (g === 'again') { s.r = 0; s.i = 0; s.e = Math.max(1.3, s.e - 0.2); s.d = now + 60e3; return s; }
+    if (g === 'hard') { s.i = s.r === 0 ? 0.5 : Math.max(1, s.i * 1.2); s.e = Math.max(1.3, s.e - 0.15); }
+    if (g === 'good') { s.i = s.r === 0 ? 1 : s.r === 1 ? 3 : s.i * s.e; }
+    if (g === 'easy') { s.i = s.r === 0 ? 4 : s.i * s.e * 1.3; s.e += 0.15; }
+    s.r++; s.d = now + s.i * DAY; return s;
+  }
+  function fmtSpan(ms) {
+    const m = ms / 6e4;
+    if (m < 60) return Math.max(1, Math.round(m)) + ' phút';
+    const h = m / 60; if (h < 24) return Math.round(h) + ' giờ';
+    const d = h / 24; if (d < 30) return Math.round(d) + ' ngày';
+    return (d / 30).toFixed(d < 300 ? 1 : 0).replace('.0', '') + ' tháng';
+  }
+
+  /* ---------- state ---------- */
+  let session = { queue: [], ids: [], first: {}, free: false, stats: { again: 0, hard: 0, good: 0, easy: 0 }, total: 0, seen: 0 };
+  let cur = null;
+  let strokes = [], history = [];
+  let interacted = false;
+
+  function plan(card) {
+    let [p, t] = effPrompt().split('-');
+    if (p === 'vi' && !card.vi) p = 'roma';
+    if (p === 'kanji' && !card.kanji) p = 'roma';
+    const useKanji = t === 'kanji' && !!card.kanji;
+    return {
+      p, t: useKanji ? 'kanji' : 'kana', target: useKanji ? card.kanji : card.kana,
+      note: t === 'kanji' && !card.kanji ? 'Từ này không có kanji, hãy viết bằng kana.' : ''
+    };
+  }
+
+  function startSession(opts = {}) {
+    const cards = deck().cards(), p = prog(), now = Date.now();
+    let q;
+    if (opts.free) q = shuffle(cards.slice()).slice(0, 15);
+    else {
+      const due = cards.filter(c => p[c.id] && p[c.id].d <= now).sort((a, b) => p[a.id].d - p[b.id].d);
+      const fresh = (S.shuffle ? shuffle(cards.filter(c => !p[c.id])) : cards.filter(c => !p[c.id])).slice(0, S.newPer);
+      q = S.shuffle ? shuffle([...due, ...fresh]) : [...due, ...fresh];
+    }
+    session = { queue: q.map(c => c.id), ids: q.map(c => c.id), first: {}, free: !!opts.free, stats: { again: 0, hard: 0, good: 0, easy: 0 }, total: q.length, seen: 0 };
+    $('#doneView').hidden = true;
+    renderControls(); renderStats();
+    if (!cards.length) return showEmpty();
+    if (!q.length) return showDone();
+    showCard();
+  }
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+  function showCard(autoplay = true) {
+    const card = cardById(session.queue[0]);
+    if (!card) { session.queue.shift(); return session.queue.length ? showCard() : showDone(); }
+    cur = { card, ...plan(card), revealed: false, hint: false };
+    strokes = []; history = [];
+    renderPrompt(); renderTools(); layoutGrid(); redraw(); loadGhostFont();
+    if (autoplay && cur.p === 'audio' && interacted) speak(card.kana);
+  }
+
+  function skipCard() {
+    if (!cur) return;
+    if (session.queue.length < 2) { toast('Lượt này chỉ còn 1 từ.'); return; }
+    session.queue.push(session.queue.shift());
+    showCard();
+  }
+  function restartRound() {
+    if (!session.ids.length) { startSession(); return; }
+    const ids = shuffle(session.ids.slice());
+    session = { queue: ids, ids: session.ids, first: {}, free: session.free, stats: { again: 0, hard: 0, good: 0, easy: 0 }, total: ids.length, seen: 0 };
+    $('#doneView').hidden = true;
+    renderStats(); showCard();
+    toast('Làm lại từ đầu: bộ đếm đã về 0.');
+  }
+  function tallyCounts() {
+    const f = Object.values(session.first || {});
+    const n = gs => f.filter(x => gs.includes(x)).length;
+    return { done: f.length, good: n(['good', 'easy', 'hard']), again: n(['again']) };
+  }
+  function renderTally() {
+    const t = tallyCounts();
+    $('#tallyBar').innerHTML = `<div class="tbox t-done"><b>${t.done}/${session.total}</b><span>Đã làm</span></div>
+      <div class="tbox g-good"><b>${t.good}</b><span>Đúng</span></div>
+      <div class="tbox g-again"><b>${t.again}</b><span>Sai</span></div>`;
+  }
+  function nextCard() {
+    if (!cur) return;
+    if (!cur.revealed) { reveal(); return; }
+    grade(cur.check ? cur.check.grade : 'good');
+  }
+
+  function showEmpty() {
+    cur = null; strokes = []; history = [];
+    $('#q').innerHTML = `<div class="empty"><b>Bộ “Từ của tôi” chưa có từ nào</b>Bấm <em>Thêm từ</em> rồi dán danh sách từ, mỗi dòng một từ.</div>
+      <div class="row"><button class="btn primary" data-act="settings">Thêm từ</button></div>`;
+    $('#a').hidden = true; $('#meta').textContent = '';
+    $('#promptPanel').classList.remove('revealed');
+    renderTools(); layoutGrid(); redraw();
+  }
+
+  function reveal() {
+    if (!cur || cur.revealed) return;
+    cur.revealed = true;
+    try { cur.check = checkInk(); } catch (e) { cur.check = null; }
+    renderPrompt(); renderTools(); redraw();
+    if (S.mode === 'fc') speak(cur.card.kana);
+  }
+
+  function grade(g) {
+    if (!cur || !cur.revealed) return;
+    const id = cur.card.id;
+    session.stats[g]++;
+    if (!(id in session.first)) session.first[id] = g;
+    if (!session.free) { const p = prog(); p[id] = schedule(p[id], g); save(); }
+    session.queue.shift();
+    if (g === 'again') session.queue.splice(Math.min(3, session.queue.length), 0, id);
+    else session.seen++;
+    renderStats();
+    if (!session.queue.length) showDone(); else showCard();
+  }
+
+  function showDone() {
+    cur = null;
+    const tc = tallyCounts(), st = { again: tc.again, good: tc.good }, cards = deck().cards(), p = prog(), now = Date.now();
+    const freshLeft = cards.filter(c => !p[c.id]).length;
+    const future = cards.map(c => p[c.id] && p[c.id].d).filter(d => d && d > now);
+    const next = future.length ? Math.min(...future) : 0;
+    const did = tc.done;
+    const head = did ? (session.free ? 'Xong lượt ôn tự do' : 'Xong lượt này') : 'Chưa có thẻ nào đến hạn';
+    $('#doneCard').innerHTML = `
+      <h2><span class="jp">${did ? '済' : '休'}</span>${head}</h2>
+      ${did ? `<div class="tally">
+        <div class="g-again"><b>${st.again}</b><span>Sai</span></div>
+        <div class="g-good"><b>${st.good}</b><span>Đúng</span></div>
+        <div class="t-done"><b>${did}</b><span>Đã làm</span></div></div>` : ''}
+      <p class="meta" style="margin:0">${next ? `Thẻ tiếp theo của bộ ${esc(deck().name)} đến hạn sau ${fmtSpan(next - now)}.` : `Bộ ${esc(deck().name)} còn ${freshLeft} thẻ mới chưa học.`}</p>
+      <div class="row">
+        ${freshLeft ? `<button class="btn primary" data-act="more-new">Học ${Math.min(S.newPer, freshLeft)} thẻ mới</button>` : ''}
+        ${did ? '<button class="btn" data-act="restart">Làm lại lượt này</button>' : ''}
+        <button class="btn${freshLeft ? '' : ' primary'}" data-act="free">Ôn ngẫu nhiên 15 thẻ</button>
+      </div>
+      ${session.free || !did ? '' : '<p class="meta" style="margin:0">Ôn ngẫu nhiên không thay đổi lịch ôn tập.</p>'}`;
+    $('#doneView').hidden = false;
+    renderStats();
+  }
+
+  /* ---------- rendering ---------- */
+  function renderControls() {
+    $('#deckSeg').innerHTML = Object.entries(DECKS).map(([k, d]) =>
+      `<button data-seg="deck" data-v="${k}" aria-pressed="${S.deck === k}">${esc(d.name)}</button>`).join('');
+    document.querySelectorAll('#modeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.mode));
+  }
+
+  function renderStats() {
+    const cards = deck().cards(), p = prog(), now = Date.now();
+    let fresh = 0, due = 0, known = 0;
+    cards.forEach(c => { const s = p[c.id]; if (!s) fresh++; else { if (s.d <= now) due++; if (s.i >= 1) known++; } });
+    $('#stats').innerHTML = `<span class="stat">Mới <b>${fresh}</b></span><span class="stat">Đến hạn <b>${due}</b></span><span class="stat">Đã nhớ <b>${known}</b>/${cards.length}</span>`;
+  }
+
+  const SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+
+  function renderPrompt() {
+    const c = cur.card, script = cur.t === 'kanji' ? 'kanji' : scriptOf(cur.target);
+    const labels = { vi: 'Nghĩa', roma: 'Romaji', kanji: 'Kanji', audio: 'Nghe' };
+    let main = '';
+    if (cur.p === 'vi') main = `<div class="pm-vi">${esc(c.vi)}</div>`;
+    else if (cur.p === 'roma') main = `<div class="pm-roma">${esc(c.roma)}</div>`;
+    else if (cur.p === 'kanji') main = `<div class="pm-jp">${esc(c.kanji)}</div>`;
+    else main = `<button class="play-big" data-act="play" aria-label="Nghe từ">${SPEAKER}</button><div class="pm-cap">Chạm để nghe lại</div>`;
+
+    let hint = '';
+    if (cur.p === 'vi') hint = c.hv ? `Hán Việt: ${esc(c.hv)}` : (cur.t === 'kanji' ? '' : `Romaji: ${esc(c.roma)}`);
+    else if (cur.p === 'audio' || cur.p === 'kanji') hint = `Romaji: ${esc(c.roma)}`;
+    else if (cur.p === 'roma' && c.vi) hint = `Nghĩa: ${esc(c.vi)}`;
+
+    const showAudio = cur.p === 'audio' || cur.revealed;
+    $('#q').innerHTML = `
+      <div class="eyebrow">${labels[cur.p]} → viết ${script}</div>
+      ${main}
+      ${cur.note ? `<div class="note">${esc(cur.note)}</div>` : ''}
+      ${cur.p === 'audio' && (!hasTTS || !jaVoice) ? `<div class="note">Máy chưa có giọng tiếng Nhật nên có thể không nghe được. ${esc(voiceHelp())}</div>` : ''}
+      ${cur.hint && hint ? `<div class="hint-text">${hint}</div>` : ''}
+      <div class="row">
+        ${showAudio && cur.p !== 'audio' ? `<button class="btn" data-act="play">Nghe</button>` : ''}
+        ${showAudio ? `<button class="btn" data-act="slow">Nghe chậm</button>` : ''}
+        ${hint && !cur.hint && !cur.revealed ? `<button class="btn" data-act="hint">Gợi ý</button>` : ''}
+      </div>`;
+
+    const a = $('#a');
+    if (cur.revealed) {
+      const rows = [];
+      if (c.kanji) rows.push(['Cách đọc', `<span class="ans-kana" style="font-size:20px">${esc(c.kana)}</span>`]);
+      rows.push(['Romaji', esc(c.roma)]);
+      if (c.vi) rows.push(['Nghĩa', esc(c.vi)]);
+      if (c.hv) rows.push(['Hán Việt', esc(c.hv)]);
+      const ck = cur.check;
+      const ckHtml = !ck ? '' : ck.empty
+        ? `<div class="check g-again"><b>Máy chấm: Sai</b><ul><li>Bạn chưa viết gì trên giấy.</li></ul></div>`
+        : `<div class="check g-${ck.grade}"><b>Máy chấm: ${GRADE_VI[ck.grade]}</b>
+            ${ck.issues.length ? `<ul>${ck.issues.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : '<ul><li>Đủ nét, đúng hình chữ.</li></ul>'}
+            <span class="nums">Khớp hình ${Math.round(ck.F * 100)}% (đã tự căn giữa và chỉnh cỡ trước khi so)</span></div>`;
+      a.innerHTML = `<div class="eyebrow">Đáp án</div>
+        <div class="ans-jp">${esc(c.kanji || c.kana)}</div>
+        <dl class="ans-dl">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+        ${ckHtml}
+        <div class="pm-cap">Máy chỉ xét hình chữ và đủ nét, không trừ điểm vì chữ lệch hay to nhỏ, không kiểm tra thứ tự nét. Bấm Từ tiếp theo (hoặc Enter) để sang từ mới. Kết quả được đếm theo điểm máy chấm.</div>`;
+      a.hidden = false; a.classList.remove('reveal-in'); void a.offsetWidth; a.classList.add('reveal-in');
+    } else a.hidden = true;
+    $('#promptPanel').classList.toggle('revealed', cur.revealed);
+
+    const left = session.queue.length;
+    $('#meta').textContent = `${session.free ? 'Ôn tự do · ' : ''}${deck().name} · còn ${left} thẻ trong lượt · đã xong ${session.seen}/${session.total}`;
+  }
+
+  function renderTools() {
+    const has = !!cur;
+    $('#btnTrace').setAttribute('aria-pressed', S.trace);
+    $('#btnPen').setAttribute('aria-pressed', S.penOnly);
+    renderTally();
+    $('#btnSkip').disabled = !has;
+    $('#btnNext').disabled = !has;
+    $('#btnNext').textContent = has && cur.revealed ? 'Từ tiếp theo →' : 'Chấm bài';
+    const n = has ? Array.from(cur.target).length : 0;
+    $('#paperFoot').innerHTML = has ? `<span class="jp">練習</span> · ${n} ô · ${cur.t === 'kanji' ? 'kanji' : scriptOf(cur.target)}` : '';
+  }
+
+  /* ---------- canvas ---------- */
+  const cv = $('#pad'), ctx = cv.getContext('2d'), wrap = $('#paperWrap');
+  let W = 0, Hh = 0, dpr = 1, grid = { x: 0, y: 0, size: 100, cols: 1, rows: 1, n: 1 };
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  function resize() {
+    const r = wrap.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    W = r.width; Hh = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr);
+    cv.style.width = W + 'px'; cv.style.height = Hh + 'px';
+    layoutGrid(); redraw();
+  }
+  function layoutGrid() {
+    const n = Math.max(1, cur ? Array.from(cur.target).length : 1);
+    const foot = 22, pad = Math.max(14, Math.min(W, Hh) * 0.05);
+    const aw = W - pad * 2, ah = Hh - pad * 2 - foot;
+    let best = { size: 0, rows: 1, cols: n };
+    for (let rows = 1; rows <= n; rows++) {
+      const cols = Math.ceil(n / rows), size = Math.min(aw / cols, ah / rows);
+      if (size > best.size + 0.5) best = { rows, cols, size };
+    }
+    best.size = Math.max(40, Math.min(best.size, 460));
+    grid = { ...best, n, x: (W - best.cols * best.size) / 2, y: (Hh - foot - best.rows * best.size) / 2 };
+  }
+  const cellOrigin = i => [grid.x + (i % grid.cols) * grid.size, grid.y + Math.floor(i / grid.cols) * grid.size];
+  const toPx = p => [grid.x + p.x * grid.size, grid.y + p.y * grid.size];
+
+  function redraw() {
+    if (!W) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, Hh);
+    const gcol = css('--grid'), s = grid.size;
+    ctx.strokeStyle = gcol;
+    for (let i = 0; i < grid.n; i++) {
+      const [x, y] = cellOrigin(i);
+      ctx.globalAlpha = 1; ctx.setLineDash([]); ctx.lineWidth = 1.5;
+      ctx.strokeRect(x, y, s, s);
+      ctx.globalAlpha = 0.45; ctx.setLineDash([4, 6]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x + s / 2, y + 4); ctx.lineTo(x + s / 2, y + s - 4); ctx.moveTo(x + 4, y + s / 2); ctx.lineTo(x + s - 4, y + s / 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.setLineDash([]);
+    if (cur && (cur.revealed || S.trace)) {
+      const chars = Array.from(cur.target);
+      ctx.fillStyle = cur.revealed ? css('--accent') : css('--ink');
+      ctx.globalAlpha = cur.revealed ? 0.4 : 0.13;
+      ctx.font = `400 ${Math.round(s * 0.76)}px "Klee One", "Hiragino Mincho ProN", serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      chars.forEach((ch, i) => { const [x, y] = cellOrigin(i); ctx.fillText(ch, x + s / 2, y + s / 2 + s * 0.03); });
+      ctx.globalAlpha = 1;
+    }
+    const ink = css('--ink');
+    strokes.forEach(st => drawStroke(st, ink));
+  }
+  function setInk(ink) { ctx.strokeStyle = ctx.fillStyle = ink; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.globalAlpha = 1; }
+  function dot(p) { const [x, y] = toPx(p); ctx.beginPath(); ctx.arc(x, y, p.w * grid.size / 2, 0, Math.PI * 2); ctx.fill(); }
+  function seg(pts, i) {
+    const a = pts[i - 1], b = pts[i], z = pts[i - 2];
+    const [ax, ay] = toPx(a), [bx, by] = toPx(b);
+    let sx = ax, sy = ay;
+    if (z) { const [zx, zy] = toPx(z); sx = (zx + ax) / 2; sy = (zy + ay) / 2; }
+    ctx.lineWidth = ((a.w + b.w) / 2) * grid.size;
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(ax, ay, (ax + bx) / 2, (ay + by) / 2); ctx.stroke();
+  }
+  function tail(pts) {
+    if (pts.length < 2) return;
+    const a = pts[pts.length - 2], b = pts[pts.length - 1];
+    const [ax, ay] = toPx(a), [bx, by] = toPx(b);
+    ctx.lineWidth = b.w * grid.size;
+    ctx.beginPath(); ctx.moveTo((ax + bx) / 2, (ay + by) / 2); ctx.lineTo(bx, by); ctx.stroke();
+  }
+  function drawStroke(st, ink) {
+    setInk(ink);
+    const pts = st.pts; if (!pts.length) return;
+    dot(pts[0]);
+    for (let i = 1; i < pts.length; i++) seg(pts, i);
+    tail(pts);
+  }
+
+  let drawing = null;
+  function addPoint(ev) {
+    const r = cv.getBoundingClientRect();
+    const x = (ev.clientX - r.left - grid.x) / grid.size, y = (ev.clientY - r.top - grid.y) / grid.size;
+    const base = 0.036;
+    const w = ev.pointerType === 'pen' ? base * (0.5 + (ev.pressure || 0.5) * 1.0) : base;
+    const pts = drawing.st.pts, last = pts[pts.length - 1];
+    if (last && Math.hypot(x - last.x, y - last.y) < 0.003) return;
+    pts.push({ x, y, w: last ? last.w * 0.6 + w * 0.4 : w });
+    if (pts.length === 1) dot(pts[0]); else seg(pts, pts.length - 1);
+  }
+  cv.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'pen' && !S.penAuto) {
+      S.penAuto = true; S.penOnly = true; save(); renderTools();
+      toast('Đã nhận Apple Pencil: tay chạm vào giấy sẽ không vẽ nữa.');
+    }
+    if (S.penOnly && e.pointerType === 'touch') return;
+    if (e.button > 0 || drawing) return;
+    noteInteraction();
+    e.preventDefault();
+    try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+    drawing = { id: e.pointerId, st: { pts: [] } };
+    strokes.push(drawing.st); history.push({ type: 'stroke' });
+    setInk(css('--ink'));
+    addPoint(e);
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!drawing || e.pointerId !== drawing.id) return;
+    e.preventDefault();
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    (evs.length ? evs : [e]).forEach(addPoint);
+  });
+  const endStroke = e => {
+    if (!drawing || e.pointerId !== drawing.id) return;
+    tail(drawing.st.pts); drawing = null;
+  };
+  cv.addEventListener('pointerup', endStroke);
+  cv.addEventListener('pointercancel', endStroke);
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('gesturestart', e => e.preventDefault());
+
+  function undo() {
+    const h = history.pop(); if (!h) return;
+    if (h.type === 'stroke') strokes.pop(); else strokes = h.prev;
+    redraw();
+  }
+  function clearInk() {
+    if (!strokes.length) return;
+    history.push({ type: 'clear', prev: strokes }); strokes = []; redraw();
+  }
+  /* ---------- auto check ---------- */
+  const GRADES = ['again', 'hard', 'good', 'easy'];
+  const GRADE_VI = { again: 'Sai', hard: 'Đúng', good: 'Đúng', easy: 'Đúng' };
+  function checkInk() {
+    if (!cur) return null;
+    const drawn = strokes.filter(s => s.pts.length);
+    if (!drawn.length) return { empty: true, grade: 'again' };
+    const N = 96, cols = grid.cols, rows = grid.rows, w = cols * N, h = rows * N, r = Math.round(N * 0.05);
+    const mk = () => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c.getContext('2d', { willReadFrequently: true }); };
+    const t = mk(), td = mk(), u = mk(), ud = mk();
+    const offs = [[0, 0]];
+    for (let a = 0; a < 16; a++) offs.push([Math.cos(a * Math.PI / 8) * r, Math.sin(a * Math.PI / 8) * r]);
+    [t, td].forEach(c => { c.font = `400 ${Math.round(N * 0.76)}px "Klee One", "Hiragino Mincho ProN", serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; });
+    Array.from(cur.target).forEach((ch, i) => {
+      const cx = (i % cols) * N + N / 2, cy = Math.floor(i / cols) * N + N / 2 + N * 0.03;
+      t.fillText(ch, cx, cy);
+      offs.forEach(([dx, dy]) => td.fillText(ch, cx + dx, cy + dy));
+    });
+    const px = c => c.getImageData(0, 0, w, h).data;
+    const T = px(t), TD = px(td);
+    // khung chữ mẫu
+    const bt = [w, h, -1, -1];
+    for (let i = 3, k = 0; i < T.length; i += 4, k++) if (T[i] > 100) { const x = k % w, y = (k / w) | 0; if (x < bt[0]) bt[0] = x; if (y < bt[1]) bt[1] = y; if (x > bt[2]) bt[2] = x; if (y > bt[3]) bt[3] = y; }
+    if (bt[2] < 0) return null;
+    // khung nét người viết (tính cả độ dày nét)
+    const bu = [Infinity, Infinity, -Infinity, -Infinity];
+    drawn.forEach(st => st.pts.forEach(p => { const x = p.x * N, y = p.y * N, e = p.w * N / 2; bu[0] = Math.min(bu[0], x - e); bu[1] = Math.min(bu[1], y - e); bu[2] = Math.max(bu[2], x + e); bu[3] = Math.max(bu[3], y + e); }));
+    const tw = bt[2] - bt[0] + 1, th = bt[3] - bt[1] + 1, uw = Math.max(1, bu[2] - bu[0]), uh = Math.max(1, bu[3] - bu[1]);
+    const off = Math.hypot(((bu[0] + bu[2]) - (bt[0] + bt[2])) / 2 / N, ((bu[1] + bu[3]) - (bt[1] + bt[3])) / 2 / N);
+    const size = Math.sqrt((uw * uh) / (tw * th));
+    // căn nét người viết về cùng vị trí, cùng cỡ với mẫu (giữ tỉ lệ ngang/dọc gần đúng)
+    let sx = tw / uw, sy = th / uh;
+    const g0 = Math.sqrt(sx * sy); sx = Math.min(Math.max(sx, g0 / 1.35), g0 * 1.35); sy = Math.min(Math.max(sy, g0 / 1.35), g0 * 1.35);
+    const ucx = (bu[0] + bu[2]) / 2, ucy = (bu[1] + bu[3]) / 2, tcx = (bt[0] + bt[2]) / 2, tcy = (bt[1] + bt[3]) / 2;
+    const X = p => tcx + (p.x * N - ucx) * sx, Y = p => tcy + (p.y * N - ucy) * sy;
+    const lw = p => Math.max(2, p.w * N * Math.sqrt(sx * sy));
+    const ink = (c, extra) => {
+      c.lineCap = 'round'; c.lineJoin = 'round';
+      drawn.forEach(st => {
+        const p = st.pts;
+        c.beginPath(); c.arc(X(p[0]), Y(p[0]), (lw(p[0]) + extra) / 2, 0, Math.PI * 2); c.fill();
+        for (let i = 1; i < p.length; i++) {
+          c.lineWidth = (lw(p[i - 1]) + lw(p[i])) / 2 + extra;
+          c.beginPath(); c.moveTo(X(p[i - 1]), Y(p[i - 1])); c.lineTo(X(p[i]), Y(p[i])); c.stroke();
+        }
+      });
+    };
+    ink(u, 0); ink(ud, 2 * r);
+    const U = px(u), UD = px(ud);
+    let nt = 0, nu = 0, rec = 0, prec = 0;
+    const zt = {}, zr = {};
+    for (let i = 3, k = 0; i < T.length; i += 4, k++) {
+      const x = k % w, y = (k / w) | 0;
+      if (T[i] > 100) {
+        nt++;
+        const z = (Math.floor(y / N) * cols + Math.floor(x / N)) * 9 + Math.min(2, Math.floor((y % N) / (N / 3))) * 3 + Math.min(2, Math.floor((x % N) / (N / 3)));
+        zt[z] = (zt[z] || 0) + 1;
+        if (UD[i] > 100) { rec++; zr[z] = (zr[z] || 0) + 1; }
+      }
+      if (U[i] > 100) { nu++; if (TD[i] > 100) prec++; }
+    }
+    if (!nt || !nu) return { empty: true, grade: 'again' };
+    const R = rec / nt, P = prec / nu, F = 2 * R * P / (R + P || 1);
+    const nChars = Array.from(cur.target).length;
+    const missing = Object.keys(zt).map(Number).filter(z => zt[z] > (nt / nChars) * 0.06 && (zr[z] || 0) / zt[z] < 0.25);
+    let g = F >= 0.8 ? 3 : F >= 0.45 ? 2 : 0;
+    if (R < 0.5 || P < 0.4 || missing.length) g = 0;
+    const issues = [];
+    if (missing.length) {
+      const zn = z => { const c = Math.floor(z / 9), k = z % 9; return `${nChars > 1 ? `chữ thứ ${c + 1}, ` : ''}phần ${['trên', 'giữa', 'dưới'][Math.floor(k / 3)]} ${['bên trái', 'chính giữa', 'bên phải'][k % 3]}`; };
+      issues.push(`Thiếu nét ở ${missing.slice(0, 3).map(zn).join('; ')}${missing.length > 3 ? '…' : ''}.`);
+    }
+    if (!missing.length && R < 0.6) issues.push('Nhiều phần của chữ mẫu không có nét của bạn: thiếu nét hoặc sai hình.');
+    if (P < 0.55) issues.push('Nhiều nét của bạn không khớp hình chữ mẫu: thừa nét hoặc sai chữ.');
+    return { F, R, P, off, size, grade: GRADES[g], issues };
+  }
+
+  function loadGhostFont() {
+    if (!cur || !document.fonts || !document.fonts.load) return;
+    document.fonts.load('400 40px "Klee One"', cur.target).then(redraw).catch(() => {});
+  }
+
+  /* ---------- speech ---------- */
+  const UA = navigator.userAgent;
+  const isIOS = /iPad|iPhone/i.test(UA) || (/Macintosh/i.test(UA) && 'ontouchend' in document);
+  const isWin = /Windows/i.test(UA), isMac = /Macintosh/i.test(UA) && !isIOS;
+  function voiceHelp() {
+    if (isIOS) return 'Trên iPad: Cài đặt › Trợ năng › Nội dung được đọc › Giọng nói › Tiếng Nhật, tải một giọng rồi mở lại trang.';
+    if (isWin) return 'Trên Windows: mở link bằng Microsoft Edge hoặc Chrome (có sẵn giọng Nhật trực tuyến), hoặc cài giọng Nhật trong Cài đặt › Thời gian & ngôn ngữ › Giọng nói.';
+    if (isMac) return 'Trên Mac: Cài đặt hệ thống › Trợ năng › Nội dung được đọc › Giọng hệ thống › Quản lý giọng nói › Tiếng Nhật.';
+    return 'Hãy mở link bằng Chrome, hoặc cài giọng tiếng Nhật cho máy.';
+  }
+  let jaVoice = null;
+  const hasTTS = 'speechSynthesis' in window;
+  function pickVoice() {
+    if (!hasTTS) return updateVoiceNote();
+    const vs = speechSynthesis.getVoices() || [];
+    const ja = vs.filter(v => /^ja/i.test(v.lang));
+    jaVoice = ja.find(v => /Nanami|Natural|Google|O-ren|Kyoko/i.test(v.name)) || ja[0] || null;
+    updateVoiceNote();
+    if (cur && cur.p === 'audio' && !cur.revealed) renderPrompt();
+  }
+  function updateVoiceNote() {
+    const el = $('#voiceNote');
+    if (!hasTTS) el.textContent = 'Trình duyệt này không hỗ trợ đọc văn bản. Hãy dùng Safari hoặc Chrome bản mới.';
+    else if (jaVoice) el.textContent = `Đang dùng giọng ${jaVoice.name} (${jaVoice.lang}).`;
+    else el.textContent = 'Chưa thấy giọng tiếng Nhật trên máy này. ' + voiceHelp();
+  }
+  let utter = null, speakSeq = 0, warnedNoVoice = false;
+  function speak(text, rate = 0.9) {
+    if (!hasTTS) { toast('Trình duyệt này không đọc được. ' + voiceHelp()); return; }
+    if (!jaVoice) pickVoice();
+    const seq = ++speakSeq;
+    const go = () => {
+      if (seq !== speakSeq) return;
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ja-JP'; if (jaVoice) u.voice = jaVoice; u.rate = rate; u.volume = 1;
+        let started = false;
+        u.onstart = () => { started = true; };
+        u.onerror = ev => {
+          if (ev.error === 'interrupted' || ev.error === 'canceled') return;
+          toast('Không phát được âm thanh (' + ev.error + '). ' + (jaVoice ? 'Thử mở link bằng Chrome hoặc Edge.' : voiceHelp()));
+        };
+        utter = u; // giữ tham chiếu để Chrome không thu hồi giữa chừng
+        if (!jaVoice && !warnedNoVoice) { warnedNoVoice = true; toast('Máy chưa có giọng tiếng Nhật. ' + voiceHelp()); }
+        speechSynthesis.resume();
+        speechSynthesis.speak(u);
+        setTimeout(() => {
+          if (started || seq !== speakSeq) return;
+          toast(jaVoice ? 'Không nghe thấy gì? Kiểm tra âm lượng, hoặc mở link bằng Chrome hay Edge.' : 'Máy chưa có giọng tiếng Nhật. ' + voiceHelp());
+        }, 1800);
+      } catch (e) { toast('Không phát được âm thanh. ' + voiceHelp()); }
+    };
+    if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); setTimeout(go, 80); }
+    else go();
+  }
+  if (hasTTS) { pickVoice(); speechSynthesis.addEventListener ? speechSynthesis.addEventListener('voiceschanged', pickVoice) : (speechSynthesis.onvoiceschanged = pickVoice); }
+  else updateVoiceNote();
+
+  /* ---------- misc ---------- */
+  let toastT = 0;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, Math.max(2800, msg.length * 60)); }
+  let wakeLock = null;
+  function noteInteraction() {
+    if (interacted) return; interacted = true;
+    requestWake();
+  }
+  function requestWake() {
+    try { navigator.wakeLock && navigator.wakeLock.request('screen').then(l => wakeLock = l).catch(() => {}); } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && interacted) requestWake(); });
+
+  function openSheet() {
+    $('#newPer').value = String(S.newPer);
+    resetRowDefault(); pickVoice();
+    $('#sheet').hidden = false;
+  }
+  function closeSheet() { $('#sheet').hidden = true; }
+  function resetRowDefault() { $('#resetRow').innerHTML = '<button class="btn danger" data-act="reset">Xoá tiến độ bộ này</button>'; }
+
+  /* ---------- events ---------- */
+  document.addEventListener('click', e => {
+    const seg = e.target.closest('[data-seg]');
+    if (seg && !seg.disabled) {
+      noteInteraction();
+      const k = seg.dataset.seg, v = seg.dataset.v;
+      if (k === 'deck' && S.deck !== v) { S.deck = v; save(); startSession(); }
+      else if (k === 'mode' && S.mode !== v) { S.mode = v; save(); startSession(); }
+      return;
+    }
+    const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+    noteInteraction();
+    const act = b.dataset.act;
+    switch (act) {
+      case 'flip': reveal(); break;
+      case 'next': nextCard(); break;
+      case 'skip': skipCard(); break;
+      case 'restart': restartRound(); break;
+      case 'grade': grade(b.dataset.g); break;
+      case 'undo': undo(); break;
+      case 'clear': clearInk(); break;
+      case 'trace': S.trace = !S.trace; save(); renderTools(); redraw(); break;
+      case 'pen': S.penOnly = !S.penOnly; S.penAuto = true; save(); renderTools(); toast(S.penOnly ? 'Chỉ Apple Pencil mới vẽ được.' : 'Ngón tay cũng vẽ được.'); break;
+      case 'play': if (cur) speak(cur.card.kana); break;
+      case 'slow': if (cur) speak(cur.card.kana, 0.55); break;
+      case 'hint': if (cur) { cur.hint = true; renderPrompt(); } break;
+      case 'settings': openSheet(); break;
+      case 'close-settings': closeSheet(); break;
+      case 'test-voice': speak('こんにちは、にほんご'); break;
+      case 'more-new': startSession(); break;
+      case 'free': startSession({ free: true }); break;
+      case 'reset':
+        $('#resetRow').innerHTML = `<span class="meta" style="align-self:center">Xoá tiến độ bộ ${esc(deck().name)}?</span>
+          <button class="btn danger" data-act="reset-yes">Xoá</button><button class="btn" data-act="reset-no">Huỷ</button>`;
+        break;
+      case 'reset-yes': {
+        const ids = new Set(deck().cards().map(c => c.id));
+        ['fc', 'dict'].forEach(m => { const p = store.progress[m]; if (p) Object.keys(p).forEach(id => { if (ids.has(id)) delete p[id]; }); });
+        save(); resetRowDefault(); toast(`Đã xoá tiến độ bộ ${deck().name}.`); startSession();
+        break;
+      }
+      case 'reset-no': resetRowDefault(); break;
+    }
+  });
+  $('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeSheet(); });
+  $('#newPer').addEventListener('change', e => { S.newPer = +e.target.value || 10; save(); });
+
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('textarea, input, select')) return;
+    if (!$('#sheet').hidden) { if (e.key === 'Escape') closeSheet(); return; }
+    if (e.key === ' ' || e.key === 'Enter') {
+      if (cur && !cur.revealed) { e.preventDefault(); reveal(); }
+      else if (e.key === 'Enter' && cur && cur.revealed && cur.check) { e.preventDefault(); grade(cur.check.grade); }
+      return;
+    }
+    if (cur && cur.revealed && '1234'.includes(e.key)) { e.preventDefault(); grade(['again', 'hard', 'good', 'easy'][+e.key - 1]); return; }
+    if ((e.key === 'z' && (e.metaKey || e.ctrlKey)) || e.key === 'Backspace') { e.preventDefault(); undo(); return; }
+    if (e.key === 'p' && cur) speak(cur.card.kana);
+    if (e.key === 'n' && cur) nextCard();
+    if (e.key === 's' && cur) skipCard();
+  });
+
+  const themeRedraw = () => redraw();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', themeRedraw);
+  new MutationObserver(themeRedraw).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  new ResizeObserver(resize).observe(wrap);
+
+  startSession();
+  resize();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
+})();
+</script>
+</body>
+</html>
